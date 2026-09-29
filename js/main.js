@@ -33,19 +33,19 @@ var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
   var chips = $('#chips');
   MB.labels(HERO_SCENES).forEach(function (label, i) {
     var b = document.createElement('button');
-    b.className = 'chip' + (i ? '' : ' on'); b.textContent = label; b.setAttribute('role', 'tab');
+    b.className = 'chip' + (i ? '' : ' on'); b.textContent = label; b.setAttribute('aria-pressed', i ? 'false' : 'true');
     b.dataset.scene = HERO_SCENES[i];
     b.addEventListener('click', function () { hero.go(HERO_SCENES[i]); });
     chips.appendChild(b);
   });
   heroEl.addEventListener('scene', function (e) {
-    $$('.chip', chips).forEach(function (c) { c.classList.toggle('on', c.dataset.scene === e.detail); });
+    $$('.chip', chips).forEach(function (c) { var on = c.dataset.scene === e.detail; c.classList.toggle('on', on); c.setAttribute('aria-pressed', on); });
   });
   $('#hero-tilt').addEventListener('click', function () { hero.step(); });
 
   function tileGlow(el) { return function (c) { el.style.setProperty('--glow', (c[0] | 0) + ', ' + (c[1] | 0) + ', ' + (c[2] | 0)); }; }
   var boards = { hero: hero };
-  var story = new MB.Board($('#story-board'), { scenes: ['time', 'lyrics', 'weather'], auto: false, onGlow: tileGlow($('#story')) });
+  var story = new MB.Board($('#story-board'), { scenes: ['time', 'lyrics', 'weather'], auto: false, minScale: 10, onGlow: tileGlow($('#story')) });
   boards.story = story;
   boards.color = new MB.Board($('#color-board'), { scenes: ['time', 'lyrics', 'art'], onGlow: tileGlow($('#colors')) });
   boards.room = new MB.Board($('#room-board'), { scenes: ['time', 'art', 'weather'], onGlow: tileGlow($('#room')) });
@@ -286,9 +286,11 @@ var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
       }
     });
     if (!storySeq) {
-      storyTl.to('#story .spin', { rotateX: 0, rotateZ: 0, scale: 1, y: 0, duration: .4, ease: 'power2.out' }, 0)
-        .to('#story .spin', { rotateY: -14, scale: 1.08, duration: .3, ease: 'sine.inOut' }, .4)
-        .to('#story .spin', { rotateY: 10, rotateX: 8, scale: .96, duration: .3, ease: 'sine.inOut' }, .7);
+      gsap.set('#story .spin', { transformOrigin: '64% 50%' });
+      storyTl.to('#story .spin', { rotateX: 0, rotateZ: 0, scale: 1, y: 0, duration: .34, ease: 'power2.out' }, 0)
+        .to('#story .spin', { scale: 2.3, duration: .2, ease: 'power2.inOut' }, .38)
+        .to('#story .spin', { scale: 1, rotateY: -12, duration: .18, ease: 'power2.inOut' }, .6)
+        .to('#story .spin', { rotateY: 10, rotateX: 6, scale: .94, duration: .22, ease: 'sine.inOut' }, .78);
     }
     storyTl.to(caps[0], { opacity: 0, y: -30, duration: .08 }, .3)
       .fromTo(caps[1], { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: .08 }, .38)

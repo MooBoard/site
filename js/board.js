@@ -491,7 +491,7 @@
   }
   Board.prototype.resize = function () {
     var w = this.el.clientWidth || 512, dpr = Math.min(window.devicePixelRatio || 1, 2);
-    var s = clamp(Math.round(w * dpr / W), 3, 12);
+    var s = clamp(Math.max(Math.round(w * dpr / W), this.opts.minScale || 0), 3, 14);
     this.el.style.setProperty('--cell', (w / W).toFixed(2) + 'px');
     if (s === this.s) return;
     this.s = s; this.dots.width = W * s; this.dots.height = H * s; this.mk = masks(s);

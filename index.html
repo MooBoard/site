@@ -78,7 +78,7 @@ if (/[?&]debug/.test(location.search)) { window.__err = []; addEventListener('er
   </div>
 
   <div class="controls" data-hero>
-    <div class="chips" id="chips" role="tablist" aria-label="Scenes"></div>
+    <div class="chips" id="chips" role="group" aria-label="Scenes"></div>
     <div class="swatches" role="radiogroup" aria-label="Frame colour">
       <button class="sw" data-frame="black" aria-label="Black"></button>
       <button class="sw" data-frame="white" aria-label="White"></button>
@@ -155,7 +155,7 @@ if (/[?&]debug/.test(location.search)) { window.__err = []; addEventListener('er
       </div>
       <div class="desk"><div class="mug"></div><div class="books"><i></i><i></i><i></i></div></div>
     </div>
-    <div class="room-tabs" role="tablist" aria-label="Placement">
+    <div class="room-tabs" role="group" aria-label="Placement">
       <button class="rt on" data-place="wall">On the wall</button>
       <button class="rt" data-place="desk">On the desk</button>
     </div>
