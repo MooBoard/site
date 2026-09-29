@@ -618,7 +618,7 @@
     var minStep = REDUCED ? .5 : 0;
     if (acc >= minStep && !document.hidden) {
       for (var i = 0; i < boards.length; i++) {
-        if (!boards[i].visible) continue;
+        if (!boards[i].visible || (boards[i].opts.when && !boards[i].opts.when())) continue;
         try { boards[i].render(t, acc); } catch (e) { if (!boards[i].failed) { boards[i].failed = 1; setTimeout(function () { throw e; }); } }
       }
       acc = 0;
