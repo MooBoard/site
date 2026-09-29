@@ -114,7 +114,7 @@
     var night = 24 - (st - r), k = ((h - st + 24) % 24) / night;
     return (18.75 + k * (24 - 12.25)) % 24;
   }
-  function drawSky(ctx, t, h, dim, region) {
+  function drawSky(ctx, t, h, dim, region, arcW) {
     var hs = h; h = skyHour(h);
     var s = skyAt(h), rw = region || W;
     for (var y = 0; y < H; y++) rect(ctx, 0, y, rw, 1, mul(mix(s[0], s[1], y / (H - 1)), dim));
@@ -131,7 +131,13 @@
     // sun by day, moon by night, on one arc: rising at the left edge, highest midway, setting at the right edge
     h = hs; var rise = SUN[0], set = SUN[1], up = h >= rise && h < set;
     var p = up ? (h - rise) / (set - rise) : ((h - set + 24) % 24) / (24 - (set - rise));
-    var bx = 2 + p * (rw - 4), by = 27 - Math.sin(p * Math.PI) * 21;
+    var aw = arcW || rw, bx = 2 + p * (aw - 4), by = 27 - Math.sin(p * Math.PI) * 21;
+    // the path itself: a faint dotted arc, one dim LED every 3 columns (the moon's is dimmer)
+    askWeather();
+    for (var ax = 2; ax <= aw - 2; ax += 3) {
+      var ap = (ax - 2) / (aw - 4), ay = Math.round(27 - Math.sin(ap * Math.PI) * 21);
+      if (Math.abs(ax - bx) > 5) px(ctx, ax, ay, up ? [255, 214, 120] : [170, 190, 255], up ? .45 : .25);
+    }
     if (up) {
       disc(ctx, bx, by, 6.5, [255, 170, 40], .22);
       disc(ctx, bx, by, 4.2, [255, 205, 70]);
@@ -424,7 +430,7 @@
       draw: function (ctx, t, st, dt) {
         var kind = sc.variant || (n % 2 === 0 ? 'snow' : 'rain'), snow = kind === 'snow';
         if (kind === 'clear') {
-          var d = new Date(); drawSky(ctx, t, d.getHours() + d.getMinutes() / 60, .8, W);
+          var d = new Date(); drawSky(ctx, t, d.getHours() + d.getMinutes() / 60 + d.getSeconds() / 3600, .8, W, 74);
           rect(ctx, 76, 9, 52, 23, [0, 0, 0], .6);
           ctext(ctx, sc.temp || '72°', 101, 25, C.warm, '900 19px Nunito');
           ctext(ctx, sc.city || 'CLEAR', 101, 31, mul(C.sky, 1));
@@ -495,9 +501,15 @@
   function askWeather() {
     if (wxAsked) return; wxAsked = true;
     var c = TZ_CITY[TZ]; if (!c || !window.fetch) return;
-    fetch('https://api.open-meteo.com/v1/forecast?latitude=' + c[0] + '&longitude=' + c[1] + '&current=temperature_2m,weather_code,is_day' + (FAHR ? '&temperature_unit=fahrenheit' : ''))
+    fetch('https://api.open-meteo.com/v1/forecast?latitude=' + c[0] + '&longitude=' + c[1] + '&current=temperature_2m,weather_code,is_day&daily=sunrise,sunset&timezone=auto&forecast_days=1' + (FAHR ? '&temperature_unit=fahrenheit' : ''))
       .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (j) { if (j && j.current) WX = { temp: Math.round(j.current.temperature_2m), kind: wxKind(j.current.weather_code), city: c[2] }; })
+      .then(function (j) {
+        if (j && j.current) WX = { temp: Math.round(j.current.temperature_2m), kind: wxKind(j.current.weather_code), city: c[2] };
+        // today's real sunrise and sunset (local clock times) drive the arc and the sky colours
+        var d = j && j.daily, hr = function (iso) { var m = /T(\d+):(\d+)/.exec(iso || ''); return m ? +m[1] + +m[2] / 60 : null; };
+        var r = d && hr(d.sunrise && d.sunrise[0]), st = d && hr(d.sunset && d.sunset[0]);
+        if (r != null && st != null && st > r) { SUN[0] = r; SUN[1] = st; }
+      })
       .catch(function () { /* stand-in sky stays */ });
   }
   S.wx = function (board) {
