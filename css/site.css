@@ -364,3 +364,8 @@ h1, h2 { font-family: var(--display); font-weight: 600; letter-spacing: -.01em; 
 .sound.on .x { display: none; } .sound.on .waves { display: inline; }
 .sound.on svg { transform: translateY(-4px); } .sound.on .eq { display: flex; }
 @media (max-width: 700px) { .sound { top: auto; bottom: max(16px, env(safe-area-inset-bottom)); margin-top: 0; right: 14px; width: 48px; height: 48px; } }
+
+/* live board laid over the rendered LED face at the end of a sequence */
+.seq-live { position: absolute; z-index: 1; opacity: 0; pointer-events: none; display: none; }
+.has-frames .seq-live { display: block; }
+.seq-live .led { width: 100%; height: 100%; aspect-ratio: auto; border-radius: 0; }

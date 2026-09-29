@@ -250,6 +250,9 @@ var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
     var w = img.naturalWidth * s, h = w / ir;
     this.ctx.clearRect(0, 0, cw, ch);
     this.ctx.drawImage(img, (cw - w) / 2, (ch - h) / 2, w, h);
+    var k = this.cv.clientWidth / cw;
+    this.rect = { x: (cw - w) / 2 * k, y: (ch - h) / 2 * k, w: w * k, h: h * k };
+    if (this.onDraw) this.onDraw(j);
   };
   function tint(section, img) {
     try {
@@ -359,6 +362,19 @@ var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
 
     // story
     var storySeq = seqs.hero, caps = $$('#story .cap'), bar = $('#story .progress i'), lastScene = 'time';
+    var scr = storySeq && storySeq.spec.screen;
+    if (scr) {
+      // the live board takes over the rendered LED face once the camera settles
+      var live = $('#story .seq-live');
+      live.appendChild($('#story-board'));
+      storySeq.onDraw = function (j) {
+        var r = storySeq.rect, q = scr.rect;
+        live.style.left = (r.x + q[0] * r.w) + 'px'; live.style.top = (r.y + q[1] * r.h) + 'px';
+        live.style.width = ((q[2] - q[0]) * r.w) + 'px'; live.style.height = ((q[3] - q[1]) * r.h) + 'px';
+        live.style.opacity = Math.max(0, Math.min(1, (j - scr.from + 4) / 8));
+      };
+      storySeq.drawn = -1; storySeq.draw();
+    }
     if (!storySeq) gsap.set('#story .spin', { rotateX: 58, rotateZ: -10, scale: .8, y: 40 });
     var storyTl = gsap.timeline({
       scrollTrigger: {
@@ -367,7 +383,7 @@ var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
           var p = self.progress;
           if (storySeq) storySeq.set(p);
           bar.style.transform = 'scaleX(' + p.toFixed(3) + ')';
-          var sc = p < .36 ? 'time' : p < .7 ? 'lyrics' : 'weather';
+          var sc = scr ? 'time' : p < .36 ? 'time' : p < .7 ? 'lyrics' : 'weather';
           if (sc !== lastScene) { lastScene = sc; story.go(sc); }
         }
       }
