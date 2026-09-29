@@ -454,6 +454,21 @@ var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
       .fromTo(caps[2], { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: .08 }, .72)
       .to({}, { duration: .2 }, .8);
 
+    // which colour (or place) a scroll position shows. A sequence can say which frames show what:
+    // "colors": { "black": [1, 30], ... } or "places": { "wall": [1, 60], "desk": [61, 120] } (1-based frames)
+    function rangeIndex(sq, key, names, p) {
+      var r = sq && sq.spec[key];
+      if (r) {
+        var f = Math.round(p * (sq.n - 1)) + 1;
+        for (var i = 0; i < names.length; i++) { var a = r[names[i]]; if (a && f >= a[0] && f <= a[1]) return i; }
+      }
+      return Math.min(names.length - 1, Math.floor(p * names.length));
+    }
+    function rangeProgress(sq, key, name, i, count) {
+      var a = sq && sq.spec[key] && sq.spec[key][name];
+      return a ? ((a[0] + a[1]) / 2 - 1) / (sq.n - 1) : (i + .5) / count;
+    }
+
     // colours
     var colorSeq = seqs.colors;
     var colorST = ST.create({
@@ -462,12 +477,12 @@ var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
         var p = self.progress;
         if (colorSeq) colorSeq.set(p);
         else gsap.set('#colors .swing', { rotateY: -16 + p * 32, rotateX: 6 - p * 6 });
-        setColor(Math.min(3, Math.floor(p * 4)), true);
+        setColor(rangeIndex(colorSeq, 'colors', FRAMES, p), true);
       }
     });
     setColor(0);
     $$('.cp').forEach(function (c, i) {
-      c.addEventListener('click', function () { scrollTo(colorST.start + (colorST.end - colorST.start) * ((i + .5) / 4)); });
+      c.addEventListener('click', function () { scrollTo(colorST.start + (colorST.end - colorST.start) * rangeProgress(colorSeq, 'colors', FRAMES[i], i, 4)); });
     });
 
     // room
@@ -477,13 +492,13 @@ var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
       onUpdate: function (self) {
         var p = self.progress;
         if (roomSeq) roomSeq.set(p);
-        var place = p < .5 ? 'wall' : 'desk';
+        var place = ['wall', 'desk'][rangeIndex(roomSeq, 'places', ['wall', 'desk'], p)];
         if ($('#room .scene').dataset.place !== place) setPlace(place);
       }
     });
     setPlace('wall');
     $$('.rt').forEach(function (b) {
-      b.addEventListener('click', function () { scrollTo(roomST.start + (roomST.end - roomST.start) * (b.dataset.place === 'wall' ? .2 : .8)); });
+      b.addEventListener('click', function () { var w = b.dataset.place === 'wall'; scrollTo(roomST.start + (roomST.end - roomST.start) * (roomSeq && roomSeq.spec.places ? rangeProgress(roomSeq, 'places', b.dataset.place, w ? 0 : 1, 2) : (w ? .2 : .8))); });
     });
     if (!REDUCED) {
       gsap.fromTo('.color-stills', { scale: 1.1 }, { scale: 1, ease: 'none', scrollTrigger: { trigger: '#colors', start: 'top top', end: '+=220%', scrub: true } });
