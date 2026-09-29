@@ -230,6 +230,15 @@
     var sg = x.createRadialGradient(sx, sy, sr * .6, sx, sy, sr * 1.05);
     sg.addColorStop(0, rgba(mixc(b, [255, 255, 255], .5), .9)); sg.addColorStop(1, rgba(b, 0));
     x.fillStyle = sg; x.beginPath(); x.arc(sx, sy, sr * 1.05, 0, 6.3); x.fill();
+    // a soft motif per colour
+    var W = size, lt = mixc(b, [255, 255, 255], .6);
+    x.save();
+    if (t.id === 'red') { for (i = 6; i > 0; i--) { x.strokeStyle = rgba(lt, .05 + i * .02); x.lineWidth = W * .018; x.beginPath(); x.arc(W * .5, W * 1.02, W * .12 * i, Math.PI, 2 * Math.PI); x.stroke(); } }
+    else if (t.id === 'yellow') { x.translate(sx, sy); for (i = 0; i < 18; i++) { x.rotate(Math.PI / 9); x.fillStyle = rgba(lt, .12); x.fillRect(sr * 1.3, -W * .006, W * .5, W * .012); } }
+    else if (t.id === 'blue') { for (var gy = 0; gy < 12; gy++) for (var gx = 0; gx < 12; gx++) { var dd = Math.hypot(gx - 8, gy - 3); x.fillStyle = rgba(lt, Math.max(0, .5 - dd * .06)); x.beginPath(); x.arc((gx + .5) * W / 12, (gy + .5) * W / 12, W * .014, 0, 6.3); x.fill(); } }
+    else if (t.id === 'violet') { for (i = 0; i < 40; i++) { x.fillStyle = rgba([255, 255, 255], rnd() * .6); x.beginPath(); x.arc(rnd() * W, rnd() * W * .6, W * .003 + rnd() * W * .004, 0, 6.3); x.fill(); } x.fillStyle = rgba(mixc(a, [0, 0, 0], .5), .9); x.beginPath(); x.arc(sx + sr * .45, sy - sr * .3, sr * .95, 0, 6.3); x.fill(); }
+    else if (t.id === 'heat') { for (i = 0; i < 7; i++) { x.strokeStyle = rgba(i % 2 ? a : b, .35); x.lineWidth = W * .05; x.beginPath(); for (var wx = -10; wx <= W + 10; wx += 10) { var wy = W * (.55 + i * .07) + Math.sin(wx / W * 6 + i) * W * .04; if (wx < 0) x.moveTo(wx, wy); else x.lineTo(wx, wy); } x.stroke(); } }
+    x.restore();
     // grain
     var img = x.getImageData(0, 0, size, size), d = img.data;
     for (i = 0; i < d.length; i += 4) { var n = (Math.random() - .5) * 26; d[i] += n; d[i + 1] += n; d[i + 2] += n; }
