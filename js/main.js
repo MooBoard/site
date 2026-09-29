@@ -462,8 +462,9 @@ var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
 
     // hero parallax + tilt
     gsap.to('.dotfield', { yPercent: 18, ease: 'none', scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true } });
-    gsap.to('.hero .stage', { y: 80, scale: .94, ease: 'none', scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true } });
-    gsap.to('.pun', { y: -60, opacity: .2, ease: 'none', scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true } });
+    // parallax lives on wrappers so it never fights the intro tweens on the same elements (that caused the board to jump)
+    gsap.fromTo('.stage-par', { y: 0, scale: 1 }, { y: 60, scale: .95, ease: 'none', immediateRender: false, scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true } });
+    gsap.fromTo('.pun-par', { y: 0, opacity: 1 }, { y: -60, opacity: .2, ease: 'none', immediateRender: false, scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true } });
     if (matchMedia('(pointer: fine)').matches && !REDUCED) {
       var tilt = $('#hero-tilt');
       $('.hero').addEventListener('pointermove', function (e) {
