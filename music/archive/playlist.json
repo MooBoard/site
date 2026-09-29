@@ -6,7 +6,7 @@
   "genre": "Pop country",
   "tint": "#E0343C",
   "src": null,
-  "lyrics": "music/red.timing.json",
+  "lyrics": "music/archive/red.timing.json",
   "synth": {
    "style": "country",
    "bpm": 104,
@@ -590,7 +590,7 @@
   "genre": "Piano rock",
   "tint": "#FFD23F",
   "src": null,
-  "lyrics": "music/yellow.timing.json",
+  "lyrics": "music/archive/yellow.timing.json",
   "synth": {
    "style": "piano",
    "bpm": 120,
@@ -1204,7 +1204,7 @@
   "genre": "Hyperpop",
   "tint": "#2F6BFF",
   "src": null,
-  "lyrics": "music/blue.timing.json",
+  "lyrics": "music/archive/blue.timing.json",
   "synth": {
    "style": "hyper",
    "bpm": 160,
@@ -2096,7 +2096,7 @@
   "genre": "Late night R&B",
   "tint": "#8F00FF",
   "src": null,
-  "lyrics": "music/violet.timing.json",
+  "lyrics": "music/archive/violet.timing.json",
   "synth": {
    "style": "rnb",
    "bpm": 78,
@@ -2496,7 +2496,7 @@
   "genre": "Psych pop",
   "tint": "#FF7A2F",
   "src": null,
-  "lyrics": "music/heat.timing.json",
+  "lyrics": "music/archive/heat.timing.json",
   "synth": {
    "style": "psych",
    "bpm": 100,

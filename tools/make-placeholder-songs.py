@@ -1,4 +1,4 @@
-"""Writes music/playlist.json and music/<id>.timing.json for the five placeholder tracks.
+"""Writes music/archive/playlist.json and music/archive/<id>.timing.json for the five placeholder tracks.
 
 Every melody, chord pattern and lyric here is original, written for MooBoard. The site plays them live with
 Web Audio (js/music.js) while a track has no audio file ("src": null). When the real songs arrive, set "src"
@@ -9,7 +9,7 @@ Run:  python3 tools/make-placeholder-songs.py
 import json, os, random
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = os.path.join(ROOT, 'music')
+OUT = os.path.join(ROOT, 'music', 'archive')
 
 NOTE = {'C': 0, 'C#': 1, 'D': 2, 'D#': 3, 'E': 4, 'F': 5, 'F#': 6, 'G': 7, 'G#': 8, 'A': 9, 'A#': 10, 'B': 11}
 MAJOR = [0, 2, 4, 5, 7, 9, 11]
@@ -102,7 +102,7 @@ def main():
     playlist = []
     for t in TRACKS:
         synth, timing = build(t)
-        tf = 'music/%s.timing.json' % t['id']
+        tf = 'music/archive/%s.timing.json' % t['id']
         with open(os.path.join(ROOT, tf), "w") as f:
             json.dump(timing, f, separators=(',', ':'))
         entry = {'id': t['id'], 'title': t['title'], 'artist': t['artist'], 'genre': t['genre'],

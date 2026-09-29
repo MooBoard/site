@@ -193,7 +193,7 @@
     if (ac && !muted) { if (document.hidden) ac.suspend(); else ac.resume(); }
   });
 
-  fetch('music/playlist.json').then(function (r) { return r.ok ? r.json() : []; }).then(function (j) {
+  fetch('music/archive/playlist.json').then(function (r) { return r.ok ? r.json() : []; }).then(function (j) {
     list = Array.isArray(j) ? j : (j.tracks || []);
     if (!list.length) return;
     ready = true;
