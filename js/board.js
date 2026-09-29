@@ -355,11 +355,11 @@
           var d = new Date(); drawSky(ctx, t, d.getHours() + d.getMinutes() / 60, .8, W);
           rect(ctx, 76, 9, 52, 23, [0, 0, 0], .6);
           ctext(ctx, sc.temp || '72°', 101, 25, C.warm, '900 19px Nunito');
-          ctext(ctx, sc.label || 'CLEAR', 101, 31, mul(C.sky, 1));
+          ctext(ctx, sc.city || 'CLEAR', 101, 31, mul(C.sky, 1));
           return;
         }
         for (var y = 0; y < H; y++) rect(ctx, 0, y, W, 1, snow ? mix([30, 40, 62], [14, 18, 30], y / H) : mix([22, 32, 48], [8, 12, 22], y / H));
-        var bolt = (kind === 'storm' || (kind === 'rain' && !sc.label)) && (st % 4.3) > 3.9 && (st % 4.3) < 4.02;
+        var bolt = (kind === 'storm' || (kind === 'rain' && !sc.city)) && (st % 4.3) > 3.9 && (st % 4.3) < 4.02;
         if (bolt) rect(ctx, 0, 0, W, H, [200, 210, 255], .5);
         // clouds
         for (var k = 0; k < 4; k++) {
@@ -383,7 +383,7 @@
         }
         rect(ctx, 76, 9, 52, 23, [0, 0, 0], .72);
         ctext(ctx, sc.temp || (snow ? '28°' : '54°'), 101, 25, C.warm, '900 19px Nunito');
-        ctext(ctx, sc.label || (snow ? 'SNOW' : 'RAIN'), 101, 32 - 1, snow ? mul(C.sky, 1) : [120, 190, 255]);
+        ctext(ctx, sc.city || (snow ? 'SNOW' : 'RAIN'), 101, 32 - 1, snow ? mul(C.sky, 1) : [120, 190, 255]);
       }
     };
     return sc;
@@ -434,8 +434,8 @@
       label: 'Weather', dur: 8,
       draw: function (ctx, t, st, dt) {
         askWeather();
-        if (!WX) { inner.variant = 'rain'; inner.label = null; return inner.draw(ctx, t, st, dt); }
-        inner.variant = WX.kind; inner.label = WX.city; inner.temp = WX.temp + '°';
+        if (!WX) { inner.variant = 'rain'; inner.city = null; return inner.draw(ctx, t, st, dt); }
+        inner.variant = WX.kind; inner.city = WX.city; inner.temp = WX.temp + '°';
         inner.draw(ctx, t, st, dt);
       }
     };
