@@ -220,26 +220,84 @@
 
   // the playlist (js/music.js): the current line lights word by word in the track's colour
   function bright(c) { var m = Math.max(c[0], c[1], c[2], 1); return mul(c, 255 / m); }
-  function songLine(ctx, words, y, p, tint) {
-    var font = '900 13px Nunito', line = words.map(function (w) { return w.text; }).join(' ');
-    var w0 = measure(line, font).w, sz = w0 > 124 ? '900 11px Nunito' : font;
-    if (sz !== font) { font = sz; w0 = measure(line, font).w; }
-    var x0 = cx(line, font, 64), xe = x0 + w0, spans = [], acc = '';
-    var hi = bright(tint || C.marigold), lo = mix(hi, C.white, .55);
-    words.forEach(function (w, k) {
-      var st = x0 + (k ? measure(acc + ' ', font).w : 0); acc += (k ? ' ' : '') + w.text;
-      spans.push([st, x0 + measure(acc, font).w, w.t0, Math.min(w.t1, w.t0 + .7)]);
+  // Lyric layout, like the real board: no glyph is ever clipped.
+  // 1) the line fits by ink at 13 px, 2) or at 11 px, 3) or it wraps at a word into both rows,
+  // 4) or the row scrolls smoothly so the word being sung stays in view; words not fully on the board are not drawn.
+  var LYR = [13, 11], AVAIL = W - 4;
+  function lf(px2) { return '900 ' + px2 + 'px Nunito'; }
+  function join(ws) { return ws.map(function (w) { return w.text; }).join(' '); }
+  function inkW(str, font) { var m = measure(str, font); return m.l + m.r; }
+  function fitRow(ws) {
+    for (var i = 0; i < LYR.length; i++) if (inkW(join(ws), lf(LYR[i])) <= AVAIL) return { words: ws, font: lf(LYR[i]) };
+    return null;
+  }
+  function rowsFor(line) {
+    var ws = line.words, r = fitRow(ws);
+    if (r) return [r];
+    if (ws.length < 2) return [{ words: ws, font: lf(11), scroll: true }];
+    for (var i = 0; i < LYR.length; i++) {
+      var f = lf(LYR[i]), best = null;
+      for (var k = 1; k < ws.length; k++) {
+        var m = Math.max(inkW(join(ws.slice(0, k)), f), inkW(join(ws.slice(k)), f));
+        if (!best || m < best[1]) best = [k, m];
+      }
+      if (best[1] <= AVAIL || i === LYR.length - 1) {
+        var A = ws.slice(0, best[0]), B = ws.slice(best[0]);
+        return [{ words: A, font: f, scroll: inkW(join(A), f) > AVAIL }, { words: B, font: f, scroll: inkW(join(B), f) > AVAIL }];
+      }
+    }
+  }
+  // pages: two one-row lines share the board (top sweeps, then bottom); a line that needs both rows gets the board to itself
+  function pagesFor(tm) {
+    if (tm._pages) return tm._pages;
+    var L = tm.lines, rows = L.map(rowsFor), pages = [], i = 0;
+    while (i < L.length) {
+      if (rows[i].length === 1 && !rows[i][0].scroll && L[i + 1] && rows[i + 1].length === 1 && !rows[i + 1][0].scroll) { pages.push({ from: i, to: i + 1, rows: [rows[i][0], rows[i + 1][0]] }); i += 2; }
+      else { pages.push({ from: i, to: i, rows: rows[i] }); i += 1; }
+    }
+    return (tm._pages = pages);
+  }
+  function lyricRow(ctx, row, y, p, tint) {
+    var font = row.font, line = join(row.words), m = measure(line, font), iw = m.l + m.r;
+    var hi = bright(tint || C.marigold), lo = mix(hi, C.white, .55), dim = mul(C.cream, .22);
+    // word spans relative to the ink start
+    var spans = [], acc = '';
+    row.words.forEach(function (w, k) {
+      var st = k ? measure(acc + ' ', font).w : 0; acc += (k ? ' ' : '') + w.text;
+      spans.push([st, measure(acc, font).w, w.t0, Math.min(w.t1, w.t0 + .7)]);
     });
-    text(ctx, line, x0, y, function (X) {
+    var inkX = row.scroll ? 2 : Math.round(64 - iw / 2);
+    if (row.scroll) {
+      // follow the sweep point continuously (no state, so every board scrolls alike), keeping a small margin
+      var sx = 0;
       for (var q = 0; q < spans.length; q++) {
-        var sp = spans[q];
-        if (X >= sp[0] - 1 && X <= sp[1] + 1) {
+        var f = clamp((p - spans[q][2]) / Math.max(.05, spans[q][3] - spans[q][2]), 0, 1);
+        if (p >= spans[q][2]) sx = spans[q][0] + (spans[q][1] - spans[q][0]) * f;
+      }
+      inkX = 2 - clamp(sx - AVAIL * .62, 0, iw - AVAIL);
+    }
+    var x0 = inkX + m.l, cut = null;
+    if (row.scroll) {
+      // a glyph that is not wholly on the board is not drawn at all
+      cut = new Uint8Array(W);
+      for (var c = 0; c < line.length; c++) {
+        var a = x0 + measure(line.slice(0, c), font).w, b = x0 + measure(line.slice(0, c + 1), font).w, gx;
+        if (a < 1) for (gx = 0; gx < Math.min(W, Math.floor(b)); gx++) cut[gx] = 1;          // cut on the left: hide up to its end
+        if (b > W - 1) for (gx = Math.max(0, Math.ceil(a)); gx < W; gx++) cut[gx] = 1;      // cut on the right: hide from its start
+      }
+      cut[0] = 1; cut[W - 1] = 1;
+    }
+    text(ctx, line, x0, y, function (X) {
+      if (cut && cut[X]) return [0, 0, 0, 0];
+      for (var q = 0; q < spans.length; q++) {
+        var sp = spans[q], a0 = x0 + sp[0], a1 = x0 + sp[1];
+        if (X >= a0 - 1 && X <= a1 + 1) {
           var f = (p - sp[2]) / Math.max(.05, sp[3] - sp[2]);
-          if (f >= 1 || (f > 0 && X <= sp[0] + (sp[1] - sp[0]) * f)) return mix(lo, hi, clamp((X - x0) / Math.max(1, xe - x0), 0, 1));
-          return mul(C.cream, .22);
+          if (f >= 1 || (f > 0 && X <= a0 + (a1 - a0) * f)) return mix(lo, hi, clamp((X - inkX) / Math.max(1, iw), 0, 1));
+          return dim;
         }
       }
-      return mul(C.cream, .22);
+      return dim;
     }, font);
   }
   S.song = function () {
@@ -251,10 +309,10 @@
         var p = M.pos(), L = tm.lines, li = 0;
         while (li < L.length - 1 && p >= L[li].t1) li++;
         var tint = tr && tr.tint ? hexc(tr.tint) : null;
-        // lines play in pairs: top sweeps, then bottom sweeps, then the next pair comes up
-        var top = li - (li % 2), bot = L[top + 1];
-        songLine(ctx, L[top].words, 13, p, tint);
-        if (bot) songLine(ctx, bot.words, 28, p, tint);
+        var pages = pagesFor(tm), pg = pages[0];
+        for (var i = 0; i < pages.length; i++) if (li >= pages[i].from && li <= pages[i].to) { pg = pages[i]; break; }
+        if (pg.rows.length === 2) { lyricRow(ctx, pg.rows[0], 13, p, tint); lyricRow(ctx, pg.rows[1], 28, p, tint); }
+        else lyricRow(ctx, pg.rows[0], 21, p, tint);
       }
     };
   };
