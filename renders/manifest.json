@@ -1,0 +1,8 @@
+{
+  "note": "Frame counts are 0 until the renders land. The site falls back to the live board when a sequence has no frames.",
+  "sequences": {
+    "hero":   { "dir": "seq-hero",   "frames": 0, "width": 1920, "height": 1080, "ext": "webp", "pad": 4 },
+    "colors": { "dir": "seq-colors", "frames": 0, "width": 1920, "height": 1080, "ext": "webp", "pad": 4 },
+    "room":   { "dir": "seq-room",   "frames": 0, "width": 1920, "height": 1080, "ext": "webp", "pad": 4 }
+  }
+}

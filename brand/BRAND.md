@@ -1,0 +1,62 @@
+# MooBoard brand (draft 1, 2026-09-29)
+
+MooBoard is a 128 x 32 LED wall display. The name plays on *mood board*, with a moo: the founder loves cows and signs
+with "moo". Written **MooBoard** in text; the wordmark is lowercase **mooboard**.
+
+## Voice
+
+- As little text as possible. Short labels, no long descriptions.
+- No emojis. No em dashes or en dashes anywhere; use a full stop or a comma.
+- Plain, warm, confident. Let visuals and motion carry the page.
+
+## Logo
+
+- `wordmark-*.svg`: "mooboard", Fredoka SemiBold (600), outlined to paths. Colours: deep (on light), white (on dark or
+  sky), sky, black.
+- `mark-*.svg`: the cow board. A rounded LED screen with sideways ears, two small cream horns, LED-dot eyes and a pink
+  muzzle. Variants in the four frame colours: sky, black, white, orange.
+- Lockup: mark left of the wordmark, mark height = 1.65 x the wordmark's cap height, gap = 0.35 x mark height.
+- Clear space: half the mark's height all round. Minimum mark size 24 px.
+
+## Colour
+
+| Token | Hex | Use |
+|---|---|---|
+| Sky Teal | `#3DC4E0` | The hero colour: logo, highlights, buttons |
+| Deep Teal | `#0B6E80` | Text and icons on light grounds (passes AA on white) |
+| Ink | `#0E1A22` | Text on light, dark grounds, the mark's screen |
+| Mist | `#EAF6F9` | Light ground |
+| Cream | `#F5E9D6` | Warm light ground, the horns |
+| Muzzle Pink | `#FFB7C9` | Tiny accents only (the muzzle, a sale tag) |
+
+The four launch frame colours (the product itself):
+
+| Frame | Hex | Note |
+|---|---|---|
+| Black | `#17191C` | matte |
+| White | `#F5F3EF` | matte, slightly warm |
+| Orange | `#FF7A21` | bright, not rust |
+| Translucent Teal | `#7ED9D6` at ~55% opacity | frosted, glows where light reaches it |
+
+## Type
+
+- Display: **Fredoka** (Google Fonts, OFL), weights 500 to 700, tight tracking (-1%), rounded.
+- Body and UI: **Nunito** (Google Fonts, OFL), 400 to 800.
+- Numbers on the board or in specs: Nunito tabular figures.
+
+## The product (facts for renders and copy)
+
+- Size: 518.6 x 134.6 mm face, 44 mm deep. Two 64 x 32 P4 panels side by side: a 128 x 32 LED face, 512 x 128 mm.
+- The bezel is 3 mm, flush with the LED face, 1 mm chamfer on its outer edge. Nothing else shows from the front.
+- One USB-C cable at the bottom centre. Status light: a small frosted dot on the underside near the right end.
+- Wall mount by two keyholes; an optional desk stand leans it back 10 degrees.
+- Launch price $129, regular $149 (to be confirmed).
+- What it shows: the time and live weather skies, song lyrics word by word (Spotify, Sonos, Apple TV and more), album
+  art with lights that match (Hue, Govee), what's playing on the TV, calendar and commute countdowns, 16 clock faces,
+  a red night clock, Prayer mode (aarti lyrics in Hindi and English).
+- Never show a circuit board, wires or the inside.
+
+## LED look (for the live board on the site and in renders)
+
+A dark panel of round LEDs, 4 mm pitch, each lit dot with a soft glow. Unlit dots are faintly visible (#1B1920).
+Clock: white-warm digits; lyrics: marigold-to-pink sweep (#FFB81C to #FF2E88) with cream English letters.
