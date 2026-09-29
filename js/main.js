@@ -1,5 +1,5 @@
 /* MooBoard site */
-var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
+var FORMSPREE_ID = "xjyklakl"; // set to the Formspree form id to open the waitlist
 
 (function () {
   'use strict';
