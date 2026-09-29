@@ -47,9 +47,9 @@
     },
     "room": {
       "dir": "seq-room",
-      "frames": 0,
-      "width": 1920,
-      "height": 1080,
+      "frames": 90,
+      "width": 1600,
+      "height": 900,
       "ext": "webp",
       "pad": 4
     }
