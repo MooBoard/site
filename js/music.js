@@ -24,10 +24,16 @@
     return fetch(t.lyrics).then(function (r) { return r.ok ? r.json() : null; })
       .then(function (j) {
         if (!j) return null;
-        (j.lines || []).forEach(function (l) {
-          (l.words || []).forEach(function (w) { w.text = w.text || w.w || w.word || ''; });
-          if (!l.text) l.text = l.words.map(function (w) { return w.text; }).join(' ');
+        // Prayer-style timings: lines[].en (or .text) holds the words, words[] carry t0/t1 in seconds
+        var off = (j.offsetMs || 0) / 1000, L = (j.lines || []).filter(function (l) { return l.words && l.words.length; });
+        L.forEach(function (l, i) {
+          var parts = String(l.en || l.text || '').split(/\s+/);
+          l.words.forEach(function (w, k) { w.text = w.text || w.w || parts[k] || ''; w.t0 += off; w.t1 += off; });
+          l.text = l.words.map(function (w) { return w.text; }).join(' ');
+          l.t0 = l.words[0].t0;
         });
+        L.forEach(function (l, i) { l.t1 = L[i + 1] ? L[i + 1].t0 : l.words[l.words.length - 1].t1 + .6; });
+        j.lines = L;
         timings[t.id] = j; return j;
       }).catch(function () { return null; });
   }

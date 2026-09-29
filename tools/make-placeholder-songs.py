@@ -88,11 +88,12 @@ def build(t):
             t0 = base + notes[oi][0] * step
             nxt = round((i + 1) * len(notes) / len(words))
             t1 = base + (notes[nxt][0] * step if nxt < len(notes) else line_steps * step)
-            wl.append({'text': w, 't0': round(t0, 3), 't1': round(t1, 3)})
-        lines.append({'text': text, 't0': wl[0]['t0'], 't1': round(base + line_steps * step, 3), 'words': wl})
+            wl.append({'t0': round(t0, 3), 't1': round(t1, 3)})
+        lines.append({'en': text, 'words': wl})
     length = round(len(t['lyrics']) * line_steps * step, 3)
     synth = {'style': t['style'], 'bpm': t['bpm'], 'length': length, 'lead': lead, 'bass': bass, 'chords': chords}
-    timing = {'title': t['title'], 'artist': t['artist'], 'length': length, 'lines': lines}
+    # same shape as the Prayer mode timings: lines[].en is the text, words[] line up with its words
+    timing = {'title': t['title'], 'artist': t['artist'], 'length': length, 'offsetMs': 0, 'lines': lines}
     return synth, timing
 
 
