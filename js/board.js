@@ -509,7 +509,8 @@
     this.go(this.names[(i + 1) % this.names.length]);
   };
   Board.prototype.moo = function () {
-    if (this.cur === 'moo' || this.next === 'moo') return;
+    if (this.cur === 'moo' && !this.next) { this.start = (performance.now() - t0) / 1000; return; }
+    if (this.next === 'moo') return;
     this.back = this.next || this.cur;
     if (this.next) { this.cur = this.next; this.start = this.tStart; this.next = null; }
     this.go('moo');
