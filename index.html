@@ -62,10 +62,10 @@ if (/[?&]debug/.test(location.search)) { window.__err = []; addEventListener('er
   <div class="controls" data-hero>
     <div class="chips" id="chips" role="group" aria-label="Scenes"></div>
     <div class="swatches" role="radiogroup" aria-label="Frame colour">
-      <button class="sw" data-frame="black" aria-label="Black"></button>
-      <button class="sw" data-frame="white" aria-label="White"></button>
-      <button class="sw on" data-frame="orange" aria-label="Orange"></button>
-      <button class="sw" data-frame="teal" aria-label="Translucent teal"></button>
+      <button class="sw" role="radio" aria-checked="false" data-frame="black" aria-label="Black"></button>
+      <button class="sw" role="radio" aria-checked="false" data-frame="white" aria-label="White"></button>
+      <button class="sw on" role="radio" aria-checked="true" data-frame="orange" aria-label="Orange"></button>
+      <button class="sw" role="radio" aria-checked="false" data-frame="teal" aria-label="Translucent teal"></button>
     </div>
   </div>
 
@@ -124,10 +124,10 @@ if (/[?&]debug/.test(location.search)) { window.__err = []; addEventListener('er
       </div>
     </div>
     <div class="color-pick" role="radiogroup" aria-label="Frame colour">
-      <button class="cp on" data-frame="black"><i></i><span>Black</span></button>
-      <button class="cp" data-frame="white"><i></i><span>White</span></button>
-      <button class="cp" data-frame="orange"><i></i><span>Orange</span></button>
-      <button class="cp" data-frame="teal"><i></i><span>Teal</span></button>
+      <button class="cp on" role="radio" aria-checked="true" data-frame="black"><i></i><span>Black</span></button>
+      <button class="cp" role="radio" aria-checked="false" data-frame="white"><i></i><span>White</span></button>
+      <button class="cp" role="radio" aria-checked="false" data-frame="orange"><i></i><span>Orange</span></button>
+      <button class="cp" role="radio" aria-checked="false" data-frame="teal"><i></i><span>Teal</span></button>
     </div>
   </div>
 </section>

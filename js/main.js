@@ -65,7 +65,7 @@ var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
   var CBG = { black: '#E9FBF7', white: '#E3F2EE', orange: '#FFE7D6', teal: '#D5F8EF' };
   function setHeroFrame(f) {
     $('#hero-bezel').dataset.frame = f;
-    $$('.swatches .sw').forEach(function (s) { s.classList.toggle('on', s.dataset.frame === f); });
+    $$('.swatches .sw').forEach(function (s) { s.classList.toggle('on', s.dataset.frame === f); s.setAttribute('aria-checked', s.dataset.frame === f); });
   }
   $$('.swatches .sw').forEach(function (s) {
     s.addEventListener('click', function (e) { e.stopPropagation(); setHeroFrame(s.dataset.frame); pulse($('#hero-bezel')); });
@@ -76,7 +76,7 @@ var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
     var f = FRAMES[i];
     $('#color-bezel').dataset.frame = f;
     $('#colors').style.setProperty('--cbg', CBG[f]);
-    $$('.cp').forEach(function (c) { c.classList.toggle('on', c.dataset.frame === f); });
+    $$('.cp').forEach(function (c) { c.classList.toggle('on', c.dataset.frame === f); c.setAttribute('aria-checked', c.dataset.frame === f); });
     $$('.color-stills img').forEach(function (c) { c.classList.toggle('on', c.dataset.frame === f); });
     if (fromUser) setHeroFrame(f);
     pulse($('#color-bezel'));
