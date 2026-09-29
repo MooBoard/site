@@ -1,0 +1,22 @@
+MooBoard renders: third-party assets
+
+All assets below are from Poly Haven (https://polyhaven.com), licensed CC0 (public domain).
+Downloaded 2026-09-29 through https://api.polyhaven.com/files/<id>.
+
+Models
+- potted_plant_02 (plant on the desk)        https://polyhaven.com/a/potted_plant_02
+- potted_plant_04 (small succulent)          https://polyhaven.com/a/potted_plant_04
+- pachira_aquatica_01 (floor plant)          https://polyhaven.com/a/pachira_aquatica_01
+- dining_chair_02 (chair, repainted white)   https://polyhaven.com/a/dining_chair_02
+- ceramic_vase_01 (vase on the desk)         https://polyhaven.com/a/ceramic_vase_01
+
+Textures
+- white_oak_veneer (desk top)                https://polyhaven.com/a/white_oak_veneer
+- wood_floor (floor)                         https://polyhaven.com/a/wood_floor
+
+HDRIs
+- kloofendal_48d_partly_cloudy_puresky (daylight through the window)
+                                             https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky
+
+Everything else (MooBoard enclosure from the project's OpenSCAD model, LED face, cable, studio, room shell,
+desk, monitor, keyboard, pot) is modelled for these renders. Fonts on the LED face: Nunito and Fredoka (SIL OFL).

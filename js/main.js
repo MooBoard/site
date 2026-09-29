@@ -22,6 +22,8 @@ var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
 
   /* ---------- boards ---------- */
   var HERO_SCENES = ['time', 'lyrics', 'art', 'calendar', 'score', 'prayer', 'weather'];
+  var first = HERO_SCENES.indexOf(params.get('scene'));
+  if (first > 0) HERO_SCENES = HERO_SCENES.slice(first).concat(HERO_SCENES.slice(0, first));
   var heroEl = $('#hero-board');
   var hero = new MB.Board(heroEl, {
     scenes: HERO_SCENES,
@@ -43,7 +45,7 @@ var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
 
   function tileGlow(el) { return function (c) { el.style.setProperty('--glow', (c[0] | 0) + ', ' + (c[1] | 0) + ', ' + (c[2] | 0)); }; }
   var boards = { hero: hero };
-  var story = new MB.Board($('#story-board'), { scenes: ['time', 'lyrics', 'weather'], auto: false });
+  var story = new MB.Board($('#story-board'), { scenes: ['time', 'lyrics', 'weather'], auto: false, onGlow: tileGlow($('#story')) });
   boards.story = story;
   boards.color = new MB.Board($('#color-board'), { scenes: ['time', 'lyrics', 'art'], onGlow: tileGlow($('#colors')) });
   boards.room = new MB.Board($('#room-board'), { scenes: ['time', 'art', 'weather'], onGlow: tileGlow($('#room')) });

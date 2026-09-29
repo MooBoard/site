@@ -166,15 +166,12 @@
       draw: function (ctx, t, st) {
         var per = 4, si = Math.floor(st / per) % STANZAS.length, lt = st % per;
         var lines = STANZAS[si], font = '900 13px Nunito';
-        var words = [];
-        lines.forEach(function (l) { l.split(' ').forEach(function () { words.push(1); }); });
         var wt = 0.42, cur = lt / wt, wi = 0;
         lines.forEach(function (line, li) {
           var y = li ? 28 : 13, x0 = cx(line, font, 64), parts = line.split(' '), spans = [], acc = '';
           parts.forEach(function (w, k) {
-            var s = measure(acc, font).w; acc += (k ? ' ' : '') + w;
+            acc += (k ? ' ' : '') + w;
             spans.push([x0 + (k ? measure(acc.slice(0, acc.length - w.length), font).w : 0), x0 + measure(acc, font).w, wi++]);
-            void s;
           });
           var xe = x0 + measure(line, font).w;
           text(ctx, line, x0, y, function (X) {
@@ -239,8 +236,8 @@
         var font = '900 19px Nunito', yo = Math.round((1 - ease(roll)) * -10);
         var b = text(ctx, String(n), 31, 29 + yo, function (X) { return mul(sweep(X, 31, 60), pulse); }, font);
         text(ctx, 'MIN', b.x1 + 4, 29, C.warm, '900 13px Nunito');
-        text(ctx, '3:30', 99, 10, mul(C.sky, .9));
-        text(ctx, 'DENTIST', 94, 19, mul(C.cream, .45));
+        text(ctx, '3:30', 126 - measure('3:30', PIX).w, 10, mul(C.sky, .9));
+        text(ctx, 'YOGA', 126 - measure('YOGA', PIX).w, 19, mul(C.cream, .5));
         // car on the road
         rect(ctx, 94, 27, 31, 1, [70, 70, 80]);
         var carx = 94 + ((st * 5) % 26);
@@ -404,32 +401,40 @@
     };
   };
 
-  var COW = [
-    '..e..............e..',
-    '.eee.hh......hh.eee.',
-    '..eeWWWWWWWWWWWWee..',
-    '....WWkkWWWWWWWWW...',
-    '....WkkkWWWWWkkWW...',
-    '....WWkWWWWWWkkkW...',
-    '....WWbbWWWWbbWWW...',
-    '....WWbbWWWWbbWWW...',
-    '....WWWWWWWWWWWkW...',
-    '....WppppppppppWW...',
-    '....ppppppppppppW...',
-    '....ppnnppppnnppW...',
-    '....pppppppppppp....',
-    '.....pppppppppp.....'
+  var MARK_EARS = [
+    ['M20 40 C 8 40, 2 34, 3 30 C 5 25, 16 26, 26 32 Z', 'M19 36 C 11 36, 8 33, 9 31 C 11 29, 17 30, 23 33 Z', 26, 34, 1],
+    ['M116 40 C 128 40, 134 34, 133 30 C 131 25, 120 26, 110 32 Z', 'M117 36 C 125 36, 128 33, 127 31 C 125 29, 119 30, 113 33 Z', 110, 34, -1]
   ];
-  var COWC = { e: [255, 170, 190], h: [245, 233, 214], W: [240, 240, 240], k: [70, 70, 80], b: [20, 20, 28], p: [255, 170, 195], n: [150, 60, 90] };
+  var MARK_HORNS = ['M44 24 C 42 14, 46 6, 52 5 C 54 10, 54 18, 52 24 Z', 'M92 24 C 94 14, 90 6, 84 5 C 82 10, 82 18, 84 24 Z'];
+  var P2D = {};
+  function path(d) { return P2D[d] || (P2D[d] = new Path2D(d)); }
+  function rrect(ctx, x, y, w, h, r) { ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(x, y, w, h, r); else ctx.rect(x, y, w, h); }
+  // the MooBoard mark drawn onto the LEDs. k = scale from the 136 x 112 artboard
+  function drawMark(ctx, x, y, k, t, frame) {
+    ctx.save(); ctx.translate(x, y); ctx.scale(k, k);
+    ctx.fillStyle = rgb(C.cream); MARK_HORNS.forEach(function (d) { ctx.fill(path(d)); });
+    MARK_EARS.forEach(function (e) {
+      ctx.save(); ctx.translate(e[2], e[3]); ctx.rotate(Math.sin(t * 9) * .22 * e[4] * (Math.sin(t * 1.3) > .3 ? 1 : 0)); ctx.translate(-e[2], -e[3]);
+      ctx.fillStyle = rgb(frame); ctx.fill(path(e[0])); ctx.fillStyle = rgb(C.pink); ctx.fill(path(e[1]));
+      ctx.restore();
+    });
+    ctx.fillStyle = rgb(frame); rrect(ctx, 18, 20, 100, 80, 24); ctx.fill();
+    ctx.fillStyle = '#000'; rrect(ctx, 28, 30, 80, 60, 15); ctx.fill();
+    var blink = (t % 3.7) < .12;
+    ctx.fillStyle = '#fff';
+    if (blink) { ctx.fillRect(43, 50, 16, 4); ctx.fillRect(77, 50, 16, 4); }
+    else { ctx.beginPath(); ctx.arc(51, 51, 8.5, 0, 6.3); ctx.arc(85, 51, 8.5, 0, 6.3); ctx.fill(); }
+    ctx.fillStyle = rgb([255, 150, 185]); rrect(ctx, 45, 65, 46, 21, 10); ctx.fill();
+    ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(59, 75.5, 4, 0, 6.3); ctx.arc(77, 75.5, 4, 0, 6.3); ctx.fill();
+    ctx.restore();
+  }
   S.moo = function () {
     return {
       label: 'Moo', dur: 4.5,
       draw: function (ctx, t, st) {
-        var bob = Math.round(Math.sin(t * 6) * 1);
-        COW.forEach(function (row, y) {
-          for (var x = 0; x < row.length; x++) { var ch = row[x]; if (COWC[ch]) px(ctx, 6 + x, 9 + y + bob, COWC[ch]); }
-        });
-        var letters = ['M', 'O', 'O'], font = '700 28px Fredoka', x = 36;
+        var bob = Math.round(Math.sin(t * 6) * .8);
+        drawMark(ctx, 1, 3 + bob, .235, t, C.sky);
+        var letters = ['M', 'O', 'O'], font = '700 28px Fredoka', x = 40;
         letters.forEach(function (L, i) {
           var tt = clamp((st - .15 - i * .22) / .35, 0, 1), jump = Math.round(Math.sin(tt * Math.PI) * -6 + Math.sin(t * 5 + i) * (tt >= 1 ? 1 : 0));
           if (tt > 0) {
@@ -508,7 +513,7 @@
     this.go('moo');
   };
   Board.prototype.render = function (t, dt) {
-    var sc = this.scenes[this.cur], st = t - this.start;
+    var sc = this.scenes[this.cur], st = Math.max(0, t - this.start);
     if (!this.start) { this.start = t; st = 0; }
     var TR = REDUCED ? 0.01 : 0.7;
     var mooBack = this.cur === 'moo' && this.back;
@@ -522,9 +527,9 @@
     sc.draw(a, t, st, dt);
     var out;
     if (this.next) {
-      var p = (t - this.tStart) / TR, b = this.bbx;
+      var p = Math.max(0, (t - this.tStart) / TR), b = this.bbx;
       b.fillStyle = '#000'; b.fillRect(0, 0, W, H);
-      this.scenes[this.next].draw(b, t, t - this.tStart, dt);
+      this.scenes[this.next].draw(b, t, Math.max(0, t - this.tStart), dt);
       if (p >= 1) {
         this.cur = this.next; this.next = null; this.start = this.tStart;
         this.fx.drawImage(this.B, 0, 0);
@@ -558,7 +563,10 @@
     acc += dt;
     var minStep = REDUCED ? .5 : 0;
     if (acc >= minStep && !document.hidden) {
-      for (var i = 0; i < boards.length; i++) if (boards[i].visible) boards[i].render(t, acc);
+      for (var i = 0; i < boards.length; i++) {
+        if (!boards[i].visible) continue;
+        try { boards[i].render(t, acc); } catch (e) { if (!boards[i].failed) { boards[i].failed = 1; setTimeout(function () { throw e; }); } }
+      }
       acc = 0;
     }
     requestAnimationFrame(loop);
