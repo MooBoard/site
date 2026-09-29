@@ -481,3 +481,4 @@ h1, h2 { font-family: var(--display); font-weight: 600; letter-spacing: -.01em; 
   .kicker { margin-top: 6px; }
   .controls { margin-top: 22px; gap: 10px 16px; }
 }
+@media (max-width: 700px) { .logo { padding: 6px 4px; margin: -6px -4px; } }
