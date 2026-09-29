@@ -196,6 +196,8 @@
   // Local mode: the owner's own files in local-music/ (never committed, see .gitignore) replace the archive.
   var LOCAL = [['red', 'Red'], ['yellow', 'Yellow'], ['blue', 'Blue'], ['violet', 'Violet'], ['waves', 'Waves', 'heat']];
   function localList(archive) {
+    // Only a copy served from this machine or the home network has local-music/; the public site never probes for it.
+    if (!/^(localhost|127\.0\.0\.1|\[::1\]|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|.*\.local$)/.test(location.hostname)) return Promise.resolve([]);
     var tint = {};
     archive.forEach(function (t) { tint[t.id] = t.tint; });
     return Promise.all(LOCAL.map(function (l) {
