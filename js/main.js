@@ -293,11 +293,16 @@ var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
     if (j < 0 || j === this.drawn && this.cv.width === this.lastW) return;
     this.drawn = j; this.size(); this.lastW = this.cv.width;
     var img = this.imgs[j], cw = this.cv.width, ch = this.cv.height, ir = img.naturalWidth / img.naturalHeight;
-    var cover = cw / ch > 1 && (this.spec.fit || 'cover') === 'cover';
-    var s = cover ? Math.max(cw / img.naturalWidth, ch / img.naturalHeight) : Math.min(cw / img.naturalWidth, ch / img.naturalHeight);
-    var w = img.naturalWidth * s, h = w / ir;
+    var iw = img.naturalWidth, ih = img.naturalHeight, portrait = cw / ch <= 1;
+    // landscape: cover. portrait: a little wider than the screen, with the frame's top and bottom rows stretched to fill
+    var s = portrait ? cw * 1.55 / iw : Math.max(cw / iw, ch / ih);
+    var w = iw * s, h = w / ir, x0 = (cw - w) / 2, y0 = (ch - h) / 2;
     this.ctx.clearRect(0, 0, cw, ch);
-    this.ctx.drawImage(img, (cw - w) / 2, (ch - h) / 2, w, h);
+    if (portrait && y0 > 0) {
+      this.ctx.drawImage(img, 0, 0, iw, 1, x0, 0, w, y0 + 1);
+      this.ctx.drawImage(img, 0, ih - 1, iw, 1, x0, y0 + h - 1, w, ch - y0 - h + 1);
+    }
+    this.ctx.drawImage(img, x0, y0, w, h);
     var k = this.cv.clientWidth / cw;
     this.rect = { x: (cw - w) / 2 * k, y: (ch - h) / 2 * k, w: w * k, h: h * k };
     if (this.onDraw) this.onDraw(j);
