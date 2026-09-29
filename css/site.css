@@ -460,3 +460,9 @@ h1, h2 { font-family: var(--display); font-weight: 600; letter-spacing: -.01em; 
 .an:hover { background: var(--accent-solid); color: var(--accent-ink); transform: scale(1.08); }
 .an svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
 @media (max-width: 700px) { .app-row li { width: 78vw; } .app-nav { display: none; } }
+
+.colors .big, .colors .color-pick { position: relative; z-index: 2; }
+.colors.has-frames .big { text-shadow: 0 2px 30px rgba(255, 255, 255, .6); }
+.colors.has-frames .big { position: absolute; left: 0; right: 0; top: max(84px, 9vh); }
+.colors.has-frames .color-pick { position: absolute; left: var(--gut); right: var(--gut); bottom: max(40px, 7vh); }
+@media (max-width: 700px) { .colors.has-frames .color-pick { bottom: 90px; } }

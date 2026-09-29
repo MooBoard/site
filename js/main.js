@@ -324,7 +324,10 @@ var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
     var img = new Image(); img.decoding = 'async';
     img.p = new Promise(function (res) {
       img.onload = function () { self.ok[i] = 1; res(true); if (Math.abs(i - self.want) < 3) self.draw(); };
-      img.onerror = function () { res(false); };
+      img.onerror = function () {
+        if (img.retried) return res(false);
+        img.retried = true; setTimeout(function () { img.src = self.url(i) + '?r=1'; }, 400);
+      };
     });
     img.src = this.url(i); this.imgs[i] = img;
     return img.p;
@@ -345,15 +348,17 @@ var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
   Seq.prototype.draw = function () {
     var i = this.want, j = -1;
     for (var d = 0; d < this.n; d++) { if (this.ok[i - d]) { j = i - d; break; } if (this.ok[i + d]) { j = i + d; break; } }
-    if (j < 0 || j === this.drawn && this.cv.width === this.lastW) return;
-    this.drawn = j; this.size(); this.lastW = this.cv.width;
+    if (j < 0 || !this.cv.clientWidth) return;
+    this.size();
+    if (j === this.drawn && this.cv.width === this.lastW) return;
+    this.drawn = j; this.lastW = this.cv.width;
     var img = this.imgs[j], cw = this.cv.width, ch = this.cv.height, ir = img.naturalWidth / img.naturalHeight;
     var iw = img.naturalWidth, ih = img.naturalHeight, portrait = cw / ch <= 1;
     // landscape: cover. portrait: a little wider than the screen, with the frame's top and bottom rows stretched to fill
     var s = portrait ? cw * 1.55 / iw : Math.max(cw / iw, ch / ih);
-    var w = iw * s, h = w / ir, x0 = (cw - w) / 2, y0 = (ch - h) / 2;
+    var w = iw * s, h = w / ir, x0 = (cw - w) / 2, y0 = (ch - h) / 2 + ch * (portrait ? 0 : this.spec.shiftY || 0);
     this.ctx.clearRect(0, 0, cw, ch);
-    if (portrait && y0 > 0) {
+    if (y0 > 0) {
       this.ctx.drawImage(img, 0, 0, iw, 1, x0, 0, w, y0 + 1);
       this.ctx.drawImage(img, 0, ih - 1, iw, 1, x0, y0 + h - 1, w, ch - y0 - h + 1);
     }
@@ -607,5 +612,7 @@ var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
       if (params.has('y')) setTimeout(function () { window.scrollTo(0, +params.get('y')); ST.update(); }, 300);
     } else wireStatic();
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { if (ST) ST.refresh(); });
+    // draw each sequence's current frame once layout has settled
+    requestAnimationFrame(function () { Object.keys(seqs).forEach(function (k) { seqs[k].drawn = -1; seqs[k].draw(); }); });
   });
 })();

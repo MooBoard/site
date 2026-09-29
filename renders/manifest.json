@@ -1,5 +1,5 @@
 {
-  "note": "Frame counts are 0 until the renders land. The site falls back to the live board when a sequence has no frames. screen: where the LED face sits in the last frames (fractions of the frame), so the live board can take over.",
+  "note": "Frame counts are 0 until the renders land; the site then falls back to render stills or the live board. screen: where the LED face sits in the last frames (fractions), so the live board can take over. colors/places: which frames show which frame colour or placement (1-based, inclusive).",
   "sequences": {
     "hero": {
       "dir": "seq-hero",
@@ -20,11 +20,30 @@
     },
     "colors": {
       "dir": "seq-colors",
-      "frames": 0,
-      "width": 1920,
-      "height": 1080,
+      "frames": 60,
+      "width": 1600,
+      "height": 900,
       "ext": "webp",
-      "pad": 4
+      "pad": 4,
+      "colors": {
+        "black": [
+          1,
+          12
+        ],
+        "white": [
+          13,
+          30
+        ],
+        "orange": [
+          31,
+          48
+        ],
+        "teal": [
+          49,
+          60
+        ]
+      },
+      "shiftY": 0.1
     },
     "room": {
       "dir": "seq-room",
