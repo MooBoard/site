@@ -48,24 +48,27 @@ h1, h2 { font-family: var(--display); font-weight: 600; letter-spacing: -.01em; 
 .nav.solid { background: rgba(14, 26, 34, .72); backdrop-filter: blur(14px) saturate(1.4); -webkit-backdrop-filter: blur(14px) saturate(1.4); }
 .nav.hide { transform: translateY(-110%); }
 .logo { display: flex; align-items: center; gap: 12px; }
-.logo .mark { width: 50px; height: auto; }
+.logo .mark { width: 46px; height: auto; }
 .logo .wordmark { height: 22px; width: auto; }
-.mark { --mf: var(--sky); overflow: visible; }
-.mark use { fill: var(--cream); }
-.mark .mf { fill: var(--mf); }
-.mark .ein { fill: var(--pink); }
-.mark .scr { fill: var(--ink); }
-.mark .eyes circle { fill: #fff; }
-.mark .muz { fill: var(--pink); }
-.mark .nos { fill: var(--ink); }
-.mark .ear-l { transform-origin: 26px 34px; }
-.mark .ear-r { transform-origin: 110px 34px; }
-.mark .eyes { transform-origin: 68px 51px; animation: blink 5s infinite; }
-.logo:hover .ear-l, .foot-mark:hover .ear-l, .mark.wiggle .ear-l { animation: earL .9s ease-in-out; }
-.logo:hover .ear-r, .foot-mark:hover .ear-r, .mark.wiggle .ear-r { animation: earR .9s ease-in-out; }
-@keyframes earL { 0%, 100% { transform: rotate(0); } 20% { transform: rotate(18deg); } 40% { transform: rotate(-10deg); } 60% { transform: rotate(12deg); } 80% { transform: rotate(-4deg); } }
-@keyframes earR { 0%, 100% { transform: rotate(0); } 20% { transform: rotate(-18deg); } 40% { transform: rotate(10deg); } 60% { transform: rotate(-12deg); } 80% { transform: rotate(4deg); } }
-@keyframes blink { 0%, 94%, 100% { transform: scaleY(1); } 96% { transform: scaleY(.1); } }
+.mark { overflow: visible; }
+.mark .ear { transform-box: view-box; }
+.mark .ear-l { transform-origin: 3.6px 5px; }
+.mark .ear-r { transform-origin: 16.4px 5px; }
+.mark .eyes { transform-box: view-box; transform-origin: 10px 7.5px; animation: blink 5s infinite; }
+.mark .pupils { transition: transform .12s steps(1); }
+.logo:hover .ear-l, .foot-mark:hover .ear-l, .mark.wiggle .ear-l, .mark.happy .ear-l { animation: earL .9s ease-in-out; }
+.logo:hover .ear-r, .foot-mark:hover .ear-r, .mark.wiggle .ear-r, .mark.happy .ear-r { animation: earR .9s ease-in-out; }
+@keyframes earL { 0%, 100% { transform: rotate(0); } 20% { transform: rotate(16deg); } 40% { transform: rotate(-10deg); } 60% { transform: rotate(10deg); } 80% { transform: rotate(-4deg); } }
+@keyframes earR { 0%, 100% { transform: rotate(0); } 20% { transform: rotate(-16deg); } 40% { transform: rotate(10deg); } 60% { transform: rotate(-10deg); } 80% { transform: rotate(4deg); } }
+@keyframes blink { 0%, 94%, 100% { transform: scaleY(1); } 96% { transform: scaleY(.15); } }
+/* pupils: loading cycles the brand colours, happy flashes and glows */
+.mark.loading .pupil { animation: pupilLoad 1.2s steps(1) infinite; }
+.mark.loading .pupil + .pupil { animation-delay: -.3s; }
+@keyframes pupilLoad { 0% { fill: #3DC4E0; } 25% { fill: #FFB81C; } 50% { fill: #FF2E88; } 75% { fill: #77EDD7; } }
+.mark.happy .eyes { animation: none; }
+.mark.happy .pupil { animation: pupilHappy .9s steps(1) 3; filter: drop-shadow(0 0 .7px #FFB81C); }
+@keyframes pupilHappy { 0% { fill: #FFB81C; } 17% { fill: #FF2E88; } 33% { fill: #3DC4E0; } 50% { fill: #FF7A21; } 67% { fill: #FFB7C9; } 83% { fill: #77EDD7; } }
+.confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 80; }
 
 /* ---------- LED + bezel ---------- */
 .led { position: relative; aspect-ratio: 4 / 1; width: 100%; background: #060508; overflow: hidden; border-radius: 1px; --cell: 4px; }
@@ -269,7 +272,7 @@ h1, h2 { font-family: var(--display); font-weight: 600; letter-spacing: -.01em; 
 
 /* ---------- footer ---------- */
 .foot { background: var(--ink2); padding: 70px var(--gut) 50px; text-align: center; }
-.foot-mark .mark { width: 88px; margin: 0 auto; }
+.foot-mark .mark { width: 96px; margin: 0 auto; }
 .moo { margin: 16px 0 4px; font-family: var(--display); font-weight: 600; font-size: 28px; color: var(--sky); }
 .legal { margin: 0; font-size: 13px; color: rgba(255, 255, 255, .4); font-weight: 700; }
 
@@ -282,7 +285,7 @@ h1, h2 { font-family: var(--display); font-weight: 600; letter-spacing: -.01em; 
 
 @media (max-width: 520px) {
   .nav .wordmark { display: none; }
-  .logo .mark { width: 44px; }
+  .logo .mark { width: 42px; }
   .price .now { font-size: 38px; }
   .btn { height: 52px; font-size: 18px; }
   .chip { height: 30px; padding: 0 11px; font-size: 12px; }
@@ -332,3 +335,8 @@ h1, h2 { font-family: var(--display); font-weight: 600; letter-spacing: -.01em; 
 .card.light { color: var(--ink); } .card.light span { color: rgba(14, 26, 34, .7); }
 
 @media (min-width: 760px) { .cards { grid-template-columns: 1.25fr 1fr; } .card { aspect-ratio: auto; min-height: 460px; } }
+.no-anim .stage3d .spin { transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .mark.loading .pupil { fill: #FFB81C; }
+  .mark.happy .pupil { fill: #FF2E88; }
+}

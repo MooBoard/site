@@ -90,6 +90,7 @@ var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
   function moo(from) {
     MB.boards.forEach(function (b) { if (b.visible) b.moo(); });
     $$('.mark').forEach(function (m) { m.classList.remove('wiggle'); void m.getBoundingClientRect(); m.classList.add('wiggle'); });
+    setTimeout(function () { $$('.mark').forEach(function (m) { m.classList.remove('wiggle'); }); }, 1000);
     var pop = $('#moo-pop'), r = (from || $('#logo')).getBoundingClientRect();
     pop.style.left = Math.min(innerWidth - 90, r.right - 6) + 'px';
     pop.style.top = Math.max(8, r.top - 30) + 'px';
@@ -104,26 +105,81 @@ var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
     if (typed === 'moo') moo();
   });
 
+  /* ---------- the cow's eyes ---------- */
+  var marks = $$('.mark'), loads = 0;
+  // pupils cycle the brand colours while something loads
+  function busy(p) {
+    loads++; marks.forEach(function (m) { m.classList.add('loading'); });
+    var done = function () { if (--loads <= 0) { loads = 0; marks.forEach(function (m) { m.classList.remove('loading'); }); } };
+    Promise.resolve(p).then(done, done);
+    return p;
+  }
+  // happy eyes: pupils flash and glow, ears wiggle, confetti in the brand colours
+  var happyT = 0;
+  function happy(from) {
+    marks.forEach(function (m) { m.classList.remove('happy'); void m.getBoundingClientRect(); m.classList.add('happy'); });
+    clearTimeout(happyT); happyT = setTimeout(function () { marks.forEach(function (m) { m.classList.remove('happy'); }); }, 2800);
+    if (!REDUCED) confetti(from);
+  }
+  function confetti(from) {
+    var cv = document.createElement('canvas'), dpr = Math.min(devicePixelRatio || 1, 2);
+    cv.className = 'confetti'; cv.width = innerWidth * dpr; cv.height = innerHeight * dpr; document.body.appendChild(cv);
+    var x = cv.getContext('2d'), r = from ? from.getBoundingClientRect() : { left: innerWidth / 2, top: innerHeight / 2, width: 0, height: 0 };
+    var ox = (r.left + r.width / 2) * dpr, oy = (r.top + r.height / 2) * dpr;
+    var cols = ['#3DC4E0', '#FFB81C', '#FF2E88', '#FF7A21', '#FFB7C9', '#77EDD7', '#F5E9D6'], ps = [];
+    for (var i = 0; i < 160; i++) {
+      var a = -Math.PI / 2 + (Math.random() - .5) * 2.4, v = (6 + Math.random() * 12) * dpr;
+      ps.push({ x: ox, y: oy, vx: Math.cos(a) * v, vy: Math.sin(a) * v, c: cols[i % cols.length], s: (3 + Math.random() * 5) * dpr, dot: Math.random() < .55, rot: Math.random() * 6, vr: (Math.random() - .5) * .4 });
+    }
+    var t0 = performance.now();
+    (function frame(now) {
+      var t = (now - t0) / 1000;
+      x.clearRect(0, 0, cv.width, cv.height);
+      x.globalAlpha = Math.max(0, Math.min(1, 3 - t));
+      ps.forEach(function (p) {
+        p.vy += .38 * dpr; p.vx *= .985; p.vy *= .985; p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+        x.fillStyle = p.c;
+        if (p.dot) { x.shadowColor = p.c; x.shadowBlur = 8 * dpr; x.beginPath(); x.arc(p.x, p.y, p.s / 2, 0, 6.3); x.fill(); x.shadowBlur = 0; }
+        else { x.save(); x.translate(p.x, p.y); x.rotate(p.rot); x.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); x.restore(); }
+      });
+      if (t < 3) requestAnimationFrame(frame); else cv.remove();
+    })(t0);
+  }
+  // pupils look toward the pointer, one dot at a time
+  if (matchMedia('(pointer: fine)').matches && !REDUCED) {
+    var raf = 0, px = 0, py = 0;
+    addEventListener('pointermove', function (e) {
+      px = e.clientX; py = e.clientY;
+      if (raf) return;
+      raf = requestAnimationFrame(function () {
+        raf = 0;
+        $$('.mark .pupils').forEach(function (p) {
+          var r = p.ownerSVGElement.getBoundingClientRect();
+          if (r.bottom < 0 || r.top > innerHeight) return;
+          var dx = px - (r.left + r.width / 2), dy = py - (r.top + r.height * .45), d = Math.hypot(dx, dy) || 1;
+          var sx = d < 30 ? 0 : Math.round(dx / d * 1.3), sy = d < 30 ? 0 : Math.round(dy / d * 1.3);
+          p.style.transform = 'translate(' + Math.max(-1, Math.min(1, sx)) + 'px,' + Math.max(-1, Math.min(1, sy)) + 'px)';
+        });
+      });
+    });
+  }
+
   /* ---------- waitlist ---------- */
   var form = $('#wl-form'), msg = $('#wl-msg');
   form.addEventListener('submit', function (e) {
     e.preventDefault();
-    var email = $('#wl-email').value.trim();
+    var email = $('#wl-email').value.trim(), btn = $('button', form);
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { msg.textContent = 'That email looks off.'; $('#wl-email').focus(); return; }
-    if (!FORMSPREE_ID) {
-      form.classList.add('soon');
-      msg.textContent = 'Coming soon. The list opens any day now.';
-      boards.wl.moo();
-      return;
-    }
-    var btn = $('button', form); btn.disabled = true; msg.textContent = 'Sending...';
-    fetch('https://formspree.io/f/' + encodeURIComponent(FORMSPREE_ID), { method: 'POST', headers: { Accept: 'application/json' }, body: new FormData(form) })
-      .then(function (r) {
-        if (!r.ok) throw new Error('bad');
-        form.classList.add('done'); form.reset(); msg.textContent = "You're on the list. moo.";
-        boards.wl.moo();
-      })
-      .catch(function () { msg.textContent = 'Could not send. Try again in a moment.'; })
+    btn.disabled = true; msg.textContent = '';
+    var send = FORMSPREE_ID
+      ? fetch('https://formspree.io/f/' + encodeURIComponent(FORMSPREE_ID), { method: 'POST', headers: { Accept: 'application/json' }, body: new FormData(form) })
+          .then(function (r) { if (!r.ok) throw new Error('bad'); return 'sent'; })
+      : new Promise(function (res) { setTimeout(function () { res('soon'); }, 700); });
+    busy(send).then(function (how) {
+      if (how === 'sent') { form.classList.add('done'); form.reset(); msg.textContent = "You're on the list. moo."; }
+      else { form.classList.add('soon'); msg.textContent = 'Coming soon. The list opens any day now.'; }
+      boards.wl.moo(); happy(btn);
+    }, function () { msg.textContent = 'Could not send. Try again in a moment.'; })
       .then(function () { btn.disabled = false; });
   });
 
@@ -156,10 +212,11 @@ var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
   };
   Seq.prototype.preload = function () {
     if (this.started) return; this.started = true;
+    var fin; busy(new Promise(function (res) { fin = res; }));
     var self = this, order = [], seen = {};
     [16, 8, 4, 2, 1].forEach(function (st) { for (var i = 0; i < self.n; i += st) if (!seen[i]) { seen[i] = 1; order.push(i); } });
     var k = 0;
-    (function next() { var batch = order.slice(k, k + 6); k += 6; if (!batch.length) return; Promise.all(batch.map(function (i) { return self.load(i); })).then(next); })();
+    (function next() { var batch = order.slice(k, k + 6); k += 6; if (!batch.length) return fin(); Promise.all(batch.map(function (i) { return self.load(i); })).then(next); })();
   };
   Seq.prototype.size = function () {
     var dpr = Math.min(devicePixelRatio || 1, 2), w = this.cv.clientWidth, h = this.cv.clientHeight;
@@ -258,16 +315,17 @@ var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
     // hero intro: "mood board" drops its d and becomes mooboard
     var d = $('.pun .d'), gap = $('.pun .gap');
     gsap.set([d, gap], { width: function (i, el) { return el.getBoundingClientRect().width; } });
-    var intro = gsap.timeline({ delay: .15 });
-    intro.from('.pun .w, .pun .d', { yPercent: 60, opacity: 0, duration: .9, stagger: .08, ease: 'back.out(1.8)' })
-      .from('[data-hero]', { y: 40, opacity: 0, duration: 1, stagger: .1, ease: 'power3.out', clearProps: 'transform' }, '-=.5');
-    if (!REDUCED) {
-      intro.to(d, { rotation: 38, duration: .35, ease: 'power1.inOut' }, 1.5)
+    if (REDUCED) gsap.set([d, gap], { width: 0, opacity: 0 });
+    else {
+      var intro = gsap.timeline({ delay: .15 });
+      intro.from('.pun .w, .pun .d', { yPercent: 60, opacity: 0, duration: .9, stagger: .08, ease: 'back.out(1.8)' })
+        .from('[data-hero]', { y: 40, opacity: 0, duration: 1, stagger: .1, ease: 'power3.out', clearProps: 'transform' }, '-=.5')
+        .to(d, { rotation: 38, duration: .35, ease: 'power1.inOut' }, 1.5)
         .to(d, { rotation: 8, duration: .25, ease: 'power1.inOut' })
         .to(d, { y: '120%', rotation: 70, opacity: 0, duration: .6, ease: 'power2.in' })
         .to([d, gap], { width: 0, duration: .55, ease: 'power3.inOut' }, '-=.35')
         .fromTo('.pun', { scale: 1 }, { scale: 1.04, duration: .18, yoyo: true, repeat: 1, ease: 'power1.inOut' }, '-=.1');
-    } else intro.set([d, gap], { width: 0, opacity: 0 }, 0);
+    }
 
     // hero parallax + tilt
     gsap.to('.dotfield', { yPercent: 18, ease: 'none', scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true } });
@@ -381,7 +439,12 @@ var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
     gsap.from('.foot-mark', { y: 40, rotate: -15, duration: 1, ease: 'elastic.out(1, .5)', scrollTrigger: { trigger: '.foot', start: 'top 95%' } });
   }
 
-  loadManifest().then(initSeqs).then(function () {
+  busy(Promise.all([
+    new Promise(function (res) { if (document.readyState === 'complete') res(); else addEventListener('load', res); }),
+    document.fonts ? document.fonts.ready : null
+  ]));
+  var boot = busy(loadManifest().then(initSeqs));
+  boot.then(function () {
     if (ANIM) {
       try { initMotion(); } catch (e) { root.classList.add('no-anim'); wireStatic(); throw e; }
       if (params.has('y')) setTimeout(function () { window.scrollTo(0, +params.get('y')); ST.update(); }, 300);

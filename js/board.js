@@ -401,40 +401,43 @@
     };
   };
 
-  var MARK_EARS = [
-    ['M20 40 C 8 40, 2 34, 3 30 C 5 25, 16 26, 26 32 Z', 'M19 36 C 11 36, 8 33, 9 31 C 11 29, 17 30, 23 33 Z', 26, 34, 1],
-    ['M116 40 C 128 40, 134 34, 133 30 C 131 25, 120 26, 110 32 Z', 'M117 36 C 125 36, 128 33, 127 31 C 125 29, 119 30, 113 33 Z', 110, 34, -1]
+  // the MooBoard mark is itself a 20 x 16 grid of LED dots, so it maps straight onto the panel
+  var MARK = [
+    '......cc....cc......',
+    '......cc....cc......',
+    '.....ssssssssss.....',
+    'sss.ssssssssssss.sss',
+    'sppss.kkkkkkkk.sspps',
+    'ssssskkkkkkkkkksssss',
+    '...sskwwwkkwwwkss...',
+    '...sskwowkkwowkss...',
+    '...sskwwwkkwwwkss...',
+    '...sskkkkkkkkkkss...',
+    '...sskkppppppkkss...',
+    '...sskkpkppkpkkss...',
+    '...sskkppppppkkss...',
+    '...ss.kkkkkkkk.ss...',
+    '....ssssssssssss....',
+    '.....ssssssssss.....'
   ];
-  var MARK_HORNS = ['M44 24 C 42 14, 46 6, 52 5 C 54 10, 54 18, 52 24 Z', 'M92 24 C 94 14, 90 6, 84 5 C 82 10, 82 18, 84 24 Z'];
-  var P2D = {};
-  function path(d) { return P2D[d] || (P2D[d] = new Path2D(d)); }
-  function rrect(ctx, x, y, w, h, r) { ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(x, y, w, h, r); else ctx.rect(x, y, w, h); }
-  // the MooBoard mark drawn onto the LEDs. k = scale from the 136 x 112 artboard
-  function drawMark(ctx, x, y, k, t, frame) {
-    ctx.save(); ctx.translate(x, y); ctx.scale(k, k);
-    ctx.fillStyle = rgb(C.cream); MARK_HORNS.forEach(function (d) { ctx.fill(path(d)); });
-    MARK_EARS.forEach(function (e) {
-      ctx.save(); ctx.translate(e[2], e[3]); ctx.rotate(Math.sin(t * 9) * .22 * e[4] * (Math.sin(t * 1.3) > .3 ? 1 : 0)); ctx.translate(-e[2], -e[3]);
-      ctx.fillStyle = rgb(frame); ctx.fill(path(e[0])); ctx.fillStyle = rgb(C.pink); ctx.fill(path(e[1]));
-      ctx.restore();
-    });
-    ctx.fillStyle = rgb(frame); rrect(ctx, 18, 20, 100, 80, 24); ctx.fill();
-    ctx.fillStyle = '#000'; rrect(ctx, 28, 30, 80, 60, 15); ctx.fill();
-    var blink = (t % 3.7) < .12;
-    ctx.fillStyle = '#fff';
-    if (blink) { ctx.fillRect(43, 50, 16, 4); ctx.fillRect(77, 50, 16, 4); }
-    else { ctx.beginPath(); ctx.arc(51, 51, 8.5, 0, 6.3); ctx.arc(85, 51, 8.5, 0, 6.3); ctx.fill(); }
-    ctx.fillStyle = rgb([255, 150, 185]); rrect(ctx, 45, 65, 46, 21, 10); ctx.fill();
-    ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(59, 75.5, 4, 0, 6.3); ctx.arc(77, 75.5, 4, 0, 6.3); ctx.fill();
-    ctx.restore();
+  var MARKC = { c: C.cream, p: [255, 150, 185], w: C.white, o: C.white };
+  function drawMark(ctx, x0, y0, k, t, frame) {
+    var look = Math.round(Math.sin(t * .9) * 1.2), blink = (t % 3.7) < .14, flap = Math.sin(t * 1.3) > .4 && Math.sin(t * 14) > 0 ? 1 : 0;
+    for (var r = 0; r < 16; r++) for (var c = 0; c < 20; c++) {
+      var ch = MARK[r][c];
+      if (ch === '.' || ch === 'k') continue;
+      if (blink && (ch === 'w' || ch === 'o') && r !== 7) continue;
+      var col = ch === 's' ? frame : MARKC[ch], yo = (r >= 3 && r <= 5 && (c < 3 || c > 16)) ? -flap : 0;
+      rect(ctx, x0 + c * k, y0 + (r + yo) * k, k, k, col);
+    }
+    if (!blink) [7, 12].forEach(function (c) { rect(ctx, x0 + (c + look) * k, y0 + 7 * k, k, k, [0, 0, 0]); });
   }
   S.moo = function () {
     return {
       label: 'Moo', dur: 4.5,
       draw: function (ctx, t, st) {
-        var bob = Math.round(Math.sin(t * 6) * .8);
-        drawMark(ctx, 1, 3 + bob, .235, t, C.sky);
-        var letters = ['M', 'O', 'O'], font = '700 28px Fredoka', x = 40;
+        drawMark(ctx, 0, 0, 2, t, C.sky);
+        var letters = ['M', 'O', 'O'], font = '700 28px Fredoka', x = 45;
         letters.forEach(function (L, i) {
           var tt = clamp((st - .15 - i * .22) / .35, 0, 1), jump = Math.round(Math.sin(tt * Math.PI) * -6 + Math.sin(t * 5 + i) * (tt >= 1 ? 1 : 0));
           if (tt > 0) {
@@ -442,7 +445,6 @@
             x = bb.x1 + 4;
           } else x += measure(L, font).w + 2;
         });
-        if (st > 1.2) { var hx = 116, hy = 10 + Math.round(Math.sin(t * 4) * 2); [[1, 0], [3, 0], [0, 1], [1, 1], [2, 1], [3, 1], [4, 1], [1, 2], [2, 2], [3, 2], [2, 3]].forEach(function (q) { px(ctx, hx + q[0], hy + q[1], C.pink); }); }
       }
     };
   };

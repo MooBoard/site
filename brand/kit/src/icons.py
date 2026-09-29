@@ -4,11 +4,13 @@ K = B + '/kit'
 def inner(name):
     s = open(f'{B}/{name}').read()
     return re.sub(r'^\s*<svg[^>]*>|</svg>\s*$', '', s.strip()).strip()
-MARK = {c: inner(f'mark-{c}.svg') for c in ['sky','black','white','orange']}
+MARK = {c: inner(f'mark-{c}.svg') for c in ['sky','black','white','orange','teal']}
 SKY='#3DC4E0'
 def placed(markinner, cx, cy, s):
-    # mark content box x2..134, y5..100 -> centre (68,52.5)
-    return f'<g transform="translate({cx-68*s:.2f},{cy-52.5*s:.2f}) scale({s:.4f})">{markinner}</g>'
+    # the pixel mark: a 20 x 16 dot grid, centre (10, 8); s is the old smooth mark's scale, so the pixel mark
+    # keeps the same visual size (the smooth mark was ~132 units wide, the grid is 20)
+    k = s * 6.6
+    return f'<g transform="translate({cx-10*k:.2f},{cy-8*k:.2f}) scale({k:.4f})">{markinner}</g>'
 def svg(w,h,body): return f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {w} {h}" width="{w}" height="{h}">{body}</svg>\n'
 glow = '<defs><radialGradient id="g" cx="50%" cy="42%" r="70%"><stop offset="0" stop-color="#6ED6EA"/><stop offset="1" stop-color="#3DC4E0"/></radialGradient></defs>'
 # App icon, full bleed
@@ -26,7 +28,7 @@ fav = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
 <ellipse cx="3.6" cy="11.5" rx="3.4" ry="1.9" fill="#3DC4E0"/><ellipse cx="28.4" cy="11.5" rx="3.4" ry="1.9" fill="#3DC4E0"/>
 <rect x="4" y="6" width="24" height="21" rx="6.5" fill="#3DC4E0"/>
 <rect x="7" y="9" width="18" height="15" rx="4" fill="#0E1A22"/>
-<rect x="10" y="12" width="4" height="4" rx="2" fill="#FFFFFF"/><rect x="18" y="12" width="4" height="4" rx="2" fill="#FFFFFF"/>
+<rect x="9.5" y="11.5" width="5" height="5" rx="1.2" fill="#FFFFFF"/><rect x="17.5" y="11.5" width="5" height="5" rx="1.2" fill="#FFFFFF"/><rect x="11" y="13" width="2" height="2" rx="1" fill="#0E1A22"/><rect x="19" y="13" width="2" height="2" rx="1" fill="#0E1A22"/>
 <rect x="10" y="18" width="12" height="5" rx="2.5" fill="#FFB7C9"/><rect x="13" y="20" width="2" height="2" rx="1" fill="#0E1A22"/><rect x="17" y="20" width="2" height="2" rx="1" fill="#0E1A22"/>
 </svg>
 '''
