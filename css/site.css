@@ -312,8 +312,11 @@ h1, h2 { font-family: var(--display); font-weight: 600; letter-spacing: -.01em; 
 .room-stills[data-place="desk"] .live-over { opacity: 0; }
 .room.has-stills { background: #ECEBE7; }
 @media (max-aspect-ratio: 1 / 1) {
-  .color-stills img { object-fit: cover; object-position: 48% 50%; height: 62%; top: 19%; -webkit-mask-image: linear-gradient(transparent, #000 18%, #000 82%, transparent); mask-image: linear-gradient(transparent, #000 18%, #000 82%, transparent); }
-  .f169 { width: 178vw; top: 46%; -webkit-mask-image: linear-gradient(transparent, #000 12%, #000 88%, transparent); mask-image: linear-gradient(transparent, #000 12%, #000 88%, transparent); }
+  .colors.has-stills .color-stills { top: 0; -webkit-mask-image: none; mask-image: none; }
+  .color-stills img { inset: auto; left: 52%; top: 52%; width: 150vw; height: auto; object-fit: contain; transform: translate(-50%, -50%);
+    -webkit-mask-image: linear-gradient(transparent, #000 15%, #000 85%, transparent); mask-image: linear-gradient(transparent, #000 15%, #000 85%, transparent); }
+  .f169 { transition: width 1s var(--ease); }
+  .room-stills[data-place="desk"] .f169 { width: 205vw; -webkit-mask-image: linear-gradient(transparent, #000 12%, #000 88%, transparent); mask-image: linear-gradient(transparent, #000 12%, #000 88%, transparent); }
 }
 
 /* ---------- tech cards ---------- */
