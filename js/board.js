@@ -623,52 +623,68 @@
 
   // the MooBoard mark is itself a 20 x 16 grid of LED dots, so it maps straight onto the panel
   var MARK = [
-    '.......c....c.......',
-    '.......c....c.......',
-    '.....ssssssssss.....',
-    'sss.ssssssssssss.sss',
-    'sppss.kkkkkkkk.sspps',
-    'ssssskkkkkkkkkksssss',
-    '...sskkwkkkkwkkss...',
-    '...sskwowkkwowkss...',
-    '...sskkwkkkkwkkss...',
-    '...sskkkkkkkkkkss...',
-    '...sskkppppppkkss...',
-    '...sskkpkppkpkkss...',
-    '...sskkppppppkkss...',
-    '...ss.kkkkkkkk.ss...',
-    '....ssssssssssss....',
-    '.....ssssssssss.....'
+    '..........ccc........ccc..........',
+    '..........ccc........ccc..........',
+    '..........ccc........ccc..........',
+    '..........ccsssssssssscc..........',
+    '........ssssssssssssssssss........',
+    '.......ssssssssssssssssssss.......',
+    '......ssssssssssssssssssssss......',
+    '...sssssss..............sssssss...',
+    '.ssssssss................ssssssss.',
+    'sspppsss...www......www...ssspppss',
+    '.sspssss..wwwww....wwwww..sssspss.',
+    '..ssssss..wwoww....wwoww..ssssss..',
+    '....ssss..wwwww....wwwww..ssss....',
+    '....ssss...www......www...ssss....',
+    '....ssss..................ssss....',
+    '....ssss..................ssss....',
+    '....ssss.....pppppppp.....ssss....',
+    '.....sss....pp.pppp.pp....sss.....',
+    '.....sss.....pppppppp.....sss.....',
+    '.....ssss....pppppppp....ssss.....',
+    '.....sssss..............sssss.....',
+    '......ssssssssssssssssssssss......',
+    '.......ssssssssssssssssssss.......',
+    '........ssssssssssssssssss........',
+    '............ssssssssss............'
   ];
-  var MARKC = { c: C.cream, p: [255, 150, 185], w: C.white, o: C.white };
-  function drawMark(ctx, x0, y0, k, t, frame) {
-    var look = 0, blink = (t % 3.7) < .14, flap = Math.sin(t * 1.3) > .4 && Math.sin(t * 14) > 0 ? 1 : 0;
-    for (var r = 0; r < 16; r++) for (var c = 0; c < 20; c++) {
+  var MARKC = { c: C.cream, p: [255, 170, 195], w: C.white };
+  // the brand cow on the LED grid, taken from the firmware startup card: 34 x 25 LEDs.
+  // pupil: optional colour for the two pupil LEDs (celebrations flash them; the whites stay white)
+  function drawMark(ctx, x0, y0, k, t, frame, pupil) {
+    var blink = (t % 3.7) < .14;
+    for (var r = 0; r < MARK.length; r++) for (var c = 0; c < MARK[r].length; c++) {
       var ch = MARK[r][c];
-      if (ch === '.' || ch === 'k') continue;
-      if (blink && (ch === 'w' || ch === 'o') && r !== 7) continue;
-      if (ch === 'o') { rect(ctx, x0 + c * k, y0 + r * k, k, k, C.white); continue; }
-      var col = ch === 's' ? frame : MARKC[ch], yo = (r >= 3 && r <= 5 && (c < 3 || c > 16)) ? -flap : 0;
-      rect(ctx, x0 + c * k, y0 + (r + yo) * k, k, k, col);
+      if (ch === '.') continue;
+      if (blink && (ch === 'w' || ch === 'o') && r !== 11) continue;
+      var col = ch === 's' ? frame : ch === 'o' ? (blink ? C.white : pupil || [0, 0, 0]) : MARKC[ch];
+      if (ch === 'o' && !pupil && !blink) continue; // a black pupil is just an unlit LED
+      rect(ctx, x0 + c * k, y0 + r * k, k, k, col);
     }
-    if (!blink) [7, 12].forEach(function (c) { rect(ctx, x0 + (c + look) * k, y0 + 7 * k, k, k, [0, 0, 0]); });
   }
+
   S.moo = function () {
     return {
       label: 'Moo', dur: 4.5,
       draw: function (ctx, t, st) {
-        drawMark(ctx, 0, 0, 2, t, C.sky);
-        var letters = ['M', 'O', 'O'], font = '700 28px Fredoka', x = 45;
-        letters.forEach(function (L, i) {
-          var tt = clamp((st - .15 - i * .22) / .35, 0, 1), jump = Math.round(Math.sin(tt * Math.PI) * -6 + Math.sin(t * 5 + i) * (tt >= 1 ? 1 : 0));
+        // the cow and MOO as one centred group, 2 LEDs clear of every edge
+        var font = '700 24px Fredoka', gap = 5, cw = MARK[0].length, word = 'MOO';
+        var ww = measure(word, font), inkW = Math.ceil(ww.r - ww.l) + 4, x0 = Math.round((W - (cw + gap + inkW)) / 2);
+        var pupil = st < 2.6 && !REDUCED ? hsl(Math.floor(t * 10) * 47, 1, .55) : null;
+        drawMark(ctx, x0, 3, 1, t, C.sky, pupil);
+        var x = x0 + cw + gap;
+        word.split('').forEach(function (L, i) {
+          var tt = clamp((st - .15 - i * .22) / .35, 0, 1), jump = REDUCED ? 0 : Math.round(Math.sin(tt * Math.PI) * -4);
           if (tt > 0) {
-            var bb = text(ctx, L, x, 27 + jump, function (X, Y) { return mix([255, 255, 255], C.sky, Y / 34); }, font);
-            x = bb.x1 + 4;
-          } else x += measure(L, font).w + 2;
+            var bb = text(ctx, L, x, 25 + jump, function (X, Y) { return mix([255, 255, 255], C.sky, Y / 30); }, font);
+            x = bb.x1 + 3;
+          } else x += Math.round(measure(L, font).w);
         });
       }
     };
   };
+
 
   /* ---------- the board ---------- */
   var boards = [], maskCache = {};
