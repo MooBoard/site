@@ -346,11 +346,17 @@ var FORMSPREE_ID = "xjyklakl"; // set to the Formspree form id to open the waitl
     // landscape: cover. portrait: a little wider than the screen, with the frame's top and bottom rows stretched to fill
     var s = portrait ? cw * 1.55 / iw : Math.max(cw / iw, ch / ih);
     var w = iw * s, h = w / ir, x0 = (cw - w) / 2, y0 = (ch - h) / 2 + ch * (portrait ? 0 : this.spec.shiftY || 0);
-    this.ctx.clearRect(0, 0, cw, ch);
-    if (y0 > 0) {
-      this.ctx.drawImage(img, 0, 0, iw, 1, x0, 0, w, y0 + 1);
-      this.ctx.drawImage(img, 0, ih - 1, iw, 1, x0, y0 + h - 1, w, ch - y0 - h + 1);
+    var pf = portrait && this.spec.portrait;
+    if (pf) {
+      // phones: frame a focus point (x, y as fractions of the render) showing a set share of its width,
+      // eased from the first frame's framing to the last one's
+      var k = this.n > 1 ? j / (this.n - 1) : 0, a = pf.from, b = pf.to || pf.from, L = function (u, v) { return u + (v - u) * k; };
+      var fw = L(a.w, b.w), fx = L(a.x, b.x), fy = L(a.y, b.y), at = pf.at || .46;
+      w = cw / fw; h = w / ir; x0 = cw / 2 - fx * w; y0 = ch * at - fy * h;
     }
+    this.ctx.clearRect(0, 0, cw, ch);
+    if (y0 > 0) this.ctx.drawImage(img, 0, 0, iw, 1, x0, 0, w, y0 + 1);
+    if (y0 + h < ch) this.ctx.drawImage(img, 0, ih - 1, iw, 1, x0, y0 + h - 1, w, ch - y0 - h + 1);
     this.ctx.drawImage(img, x0, y0, w, h);
     var k = this.cv.clientWidth / cw;
     this.rect = { x: (cw - w) / 2 * k, y: (ch - h) / 2 * k, w: w * k, h: h * k };

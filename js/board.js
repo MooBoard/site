@@ -95,7 +95,27 @@
     }
     return [hexc('#03050f'), hexc('#0b1233')];
   }
+  // approximate sunrise and sunset (local hours) from the time zone's offset and today's date; 6:30 / 18:30 if unknown
+  var SUN = (function () {
+    try {
+      var d = new Date(), doy = Math.floor((d - new Date(d.getFullYear(), 0, 0)) / 864e5);
+      var tzH = -d.getTimezoneOffset() / 60, dst = Math.max(new Date(d.getFullYear(), 0, 1).getTimezoneOffset(), new Date(d.getFullYear(), 6, 1).getTimezoneOffset()) !== d.getTimezoneOffset() ? 1 : 0;
+      var lat = 40 * (/^(Australia|Pacific\/Auckland|America\/(Sao_Paulo|Argentina|Santiago)|Africa\/Johannesburg)/.test(Intl.DateTimeFormat().resolvedOptions().timeZone || '') ? -1 : 1);
+      var decl = 23.44 * Math.sin((2 * Math.PI / 365) * (doy - 81)) * Math.PI / 180, la = lat * Math.PI / 180;
+      var ha = Math.acos(Math.max(-1, Math.min(1, -Math.tan(la) * Math.tan(decl)))) * 12 / Math.PI;
+      var noon = 12 + dst; // the zone's centre longitude puts solar noon near 12:00 standard time
+      return [noon - ha, noon + ha];
+    } catch (e) { return [6.5, 18.5]; }
+  })();
+  // the sky palette was drawn for a 6:30 sunrise and 18:45 sunset; stretch real time onto it
+  function skyHour(h) {
+    var r = SUN[0], st = SUN[1];
+    if (h >= r && h <= st) return 6.5 + (h - r) / (st - r) * 12.25;
+    var night = 24 - (st - r), k = ((h - st + 24) % 24) / night;
+    return (18.75 + k * (24 - 12.25)) % 24;
+  }
   function drawSky(ctx, t, h, dim, region) {
+    var hs = h; h = skyHour(h);
     var s = skyAt(h), rw = region || W;
     for (var y = 0; y < H; y++) rect(ctx, 0, y, rw, 1, mul(mix(s[0], s[1], y / (H - 1)), dim));
     var night = h < 5.6 || h > 19.8 ? 1 : h < 6.6 ? (6.6 - h) : h > 18.8 ? (h - 18.8) : 0;
@@ -108,9 +128,10 @@
         px(ctx, sx0, sy0, C.warm, night * tw * (r() > .8 ? 1 : .55));
       }
     }
-    // sun by day, moon by night, on an arc across the region
-    var up = h >= 6 && h < 19, p = up ? (h - 6) / 13 : ((h + 24 - 19) % 24) / 11;
-    var bx = 4 + p * (rw - 8), by = 24 - Math.sin(p * Math.PI) * 17;
+    // sun by day, moon by night, on one arc: rising at the left edge, highest midway, setting at the right edge
+    h = hs; var rise = SUN[0], set = SUN[1], up = h >= rise && h < set;
+    var p = up ? (h - rise) / (set - rise) : ((h - set + 24) % 24) / (24 - (set - rise));
+    var bx = 2 + p * (rw - 4), by = 27 - Math.sin(p * Math.PI) * 21;
     if (up) {
       disc(ctx, bx, by, 6.5, [255, 170, 40], .22);
       disc(ctx, bx, by, 4.2, [255, 205, 70]);
@@ -121,7 +142,7 @@
       disc(ctx, bx + 1.8, by - 1.2, 3.1, mul(mix(s[0], s[1], by / H), dim));
     }
     // drifting clouds by day
-    if (h > 7 && h < 18.5) {
+    if (skyHour(h) > 7 && skyHour(h) < 18.5) {
       for (var k = 0; k < 3; k++) {
         var cxp = ((t * (2 + k) + k * 53) % (rw + 30)) - 15, cy = 5 + k * 5;
         ctx.fillStyle = rgb([235, 240, 248], .32 * dim + .06);
@@ -224,8 +245,10 @@
         var p = M.pos(), L = tm.lines, li = 0;
         while (li < L.length - 1 && p >= L[li].t1) li++;
         var tint = tr && tr.tint ? hexc(tr.tint) : null;
-        songLine(ctx, L[li].words, 13, p, tint);
-        songLine(ctx, (L[li + 1] || L[0]).words, 28, -1, tint);
+        // lines play in pairs: top sweeps, then bottom sweeps, then the next pair comes up
+        var top = li - (li % 2), bot = L[top + 1];
+        songLine(ctx, L[top].words, 13, p, tint);
+        if (bot) songLine(ctx, bot.words, 28, p, tint);
       }
     };
   };
@@ -285,26 +308,75 @@
     };
   };
 
+  /* ---------- scores: invented teams only, original pixel logos ---------- */
+  var TEAMS = {
+    MOO: { name: 'MOOSES', c: [18, 140, 110], c2: [245, 233, 214] },   // Moo City Mooses: a cow head
+    PUM: { name: 'PUMAS', c: [96, 52, 160], c2: [255, 150, 60] }        // Pasture Pumas: a paw
+  };
+  function logo(ctx, id, x, y, r) {
+    var T = TEAMS[id];
+    disc(ctx, x, y, r, T.c2); disc(ctx, x, y, r - Math.max(1, r * .16), T.c);
+    var k = r / 10;
+    if (id === 'MOO') {
+      ctx.fillStyle = rgb(T.c2);
+      ctx.fillRect(x - 6 * k, y - 7 * k, 2 * k, 4 * k); ctx.fillRect(x + 4 * k, y - 7 * k, 2 * k, 4 * k);   // horns
+      disc(ctx, x, y + k, 5 * k, T.c2);                                                                  // face
+      disc(ctx, x - 2 * k, y, 1.1 * k, [0, 0, 0]); disc(ctx, x + 2 * k, y, 1.1 * k, [0, 0, 0]);            // eyes
+      disc(ctx, x, y + 4 * k, 2.6 * k, [255, 150, 185]);                                                 // muzzle
+    } else {
+      disc(ctx, x, y + 2.4 * k, 3.6 * k, T.c2);
+      [[-4.2, -2], [-1.5, -4.6], [1.5, -4.6], [4.2, -2]].forEach(function (q) { disc(ctx, x + q[0] * k, y + q[1] * k, 1.6 * k, T.c2); });
+    }
+  }
+  var SMALL = '8px Silkscreen', BIG = '800 22px Nunito';
   S.score = function () {
+    var conf = [];
     return {
-      label: 'Scores', dur: 7,
-      draw: function (ctx, t, st) {
-        var goal = st > 2.8, flash = Math.max(0, 1 - st / .35, goal ? 1 - (st - 2.8) / .45 : 0);
-        rect(ctx, 0, 0, 36, H, [20, 50, 170], .9);
-        rect(ctx, 92, 0, 36, H, [190, 30, 40], .9);
-        ctext(ctx, 'NYC', 18, 13, C.white);
-        ctext(ctx, 'LDN', 110, 13, C.white);
-        ctext(ctx, goal ? "79'" : "78'", 18, 25, mul(C.white, .6));
-        ctext(ctx, 'LIVE', 110, 25, mul(C.white, .6));
-        var a = goal ? 3 : 2, bump = goal ? Math.max(0, 1 - (st - 2.8) / .6) : 0;
-        ctext(ctx, a + '', 52, 25 - Math.round(bump * 3), goal && bump > 0 ? C.marigold : C.white, '900 22px Nunito');
-        ctext(ctx, '1', 76, 25, C.white, '900 22px Nunito');
-        rect(ctx, 62, 15, 3, 2, mul(C.white, .6));
-        if (goal && st < 4.6 && Math.floor(st * 6) % 2) ctext(ctx, 'GOAL', 64, 31, C.marigold);
-        if (flash > 0) rect(ctx, 0, 0, W, H, C.white, flash * .85);
+      label: 'Scores', dur: 16,
+      draw: function (ctx, t, st, dt) {
+        var A = TEAMS.MOO, B = TEAMS.PUM, ph = st % 16;
+        var mooScore = ph >= 11.2 ? 23 : 17, blink = Math.floor(t * 2) % 2;
+        if (ph < 4) {
+          // face-off: team panels with logos, big scores, status row
+          rect(ctx, 0, 0, 26, H, mul(A.c, .8)); rect(ctx, 102, 0, 26, H, mul(B.c, .8));
+          logo(ctx, 'MOO', 13, 12, 9); logo(ctx, 'PUM', 115, 12, 9);
+          ctext(ctx, '17', 47, 21, C.white, BIG); rect(ctx, 62, 12, 4, 2, mul(C.white, .6)); ctext(ctx, '14', 81, 21, C.white, BIG);
+          ctext(ctx, 'Q3 4:12', 64, 31, mul(C.cream, .7), SMALL);
+          disc(ctx, 13, 27, 1.5, [200, 110, 50]); px(ctx, 13, 27, C.white);
+          for (var i = 0; i < 3; i++) rect(ctx, 5 + i * 6, 30, 4, 1, C.white); for (i = 0; i < 2; i++) rect(ctx, 108 + i * 6, 30, 4, 1, C.white);
+        } else if (ph < 7.5) {
+          // scorebug: logo and name chips, scores, three-line status
+          logo(ctx, 'MOO', 7, 8, 6); logo(ctx, 'PUM', 7, 24, 6);
+          text(ctx, 'MOO', 16, 12, C.white, SMALL); text(ctx, 'PUM', 16, 28, C.white, SMALL);
+          text(ctx, '17', 44, 14, C.white, '800 15px Nunito'); text(ctx, '14', 44, 30, C.white, '800 15px Nunito');
+          [[64, 1], [64, 4], [64, 7]].forEach(function (q, i) { px(ctx, q[0], q[1] + 3, blink ? C.marigold : C.white); });
+          text(ctx, 'Q3 4:12', 80, 10, C.white, SMALL); text(ctx, '3RD+7', 80, 20, mul(C.cream, .75), SMALL); text(ctx, 'PUM 35', 80, 30, mul(C.cream, .6), SMALL);
+        } else if (ph < 10.5) {
+          // the field: chips, scores, status, the gridiron with the ball
+          logo(ctx, 'MOO', 8, 6, 5); logo(ctx, 'PUM', 120, 6, 5);
+          text(ctx, '17', 14, 22, C.white, '800 15px Nunito'); text(ctx, '14', 96, 22, C.white, '800 15px Nunito');
+          ctext(ctx, 'Q3 4:12', 64, 9, C.white, SMALL); ctext(ctx, '3RD+7', 64, 19, mul(C.cream, .75), SMALL);
+          rect(ctx, 4, 26, 120, 5, [24, 90, 40]); rect(ctx, 4, 26, 8, 5, mul(A.c, .9)); rect(ctx, 116, 26, 8, 5, mul(B.c, .9));
+          for (var yd = 1; yd < 10; yd++) rect(ctx, 12 + yd * 10.4, 26, 1, 5, [60, 140, 70]);
+          var bx = 70 + Math.sin(t * 2) * 1.5; rect(ctx, bx, 28, 2, 1, [200, 110, 50]); rect(ctx, 80, 26, 1, 5, [255, 220, 60]);
+        } else {
+          // celebration: cut to team colour, gold flashes, logo punch, TOUCHDOWN letter by letter, confetti, score ticks up
+          var k = ph - 10.5;
+          rect(ctx, 0, 0, W, H, mul(A.c, .75));
+          if (!REDUCED && k < 1.2 && Math.floor(k * 5) % 2 === 0) rect(ctx, 0, 0, W, H, [255, 200, 60], .55);
+          var sz = [6, 8, 10, 13, 12][Math.min(4, Math.floor(k * 6))];
+          logo(ctx, 'MOO', 15, 16, sz);
+          var word = 'TOUCHDOWN', n = Math.min(word.length, Math.floor((k - .5) * 9));
+          if (n > 0) text(ctx, word.slice(0, n), 32, 17, [255, 200, 60], '900 13px Nunito');
+          if (k > 1.6) text(ctx, A.name + ' ' + mooScore, 32, 29, C.white, SMALL);
+          if (!REDUCED && Math.random() < .6) conf.push([30 + Math.random() * 98, -1, .6 + Math.random(), [[255, 200, 60], [255, 255, 255], A.c2, [255, 150, 185]][Math.floor(Math.random() * 4)]]);
+          var stp = Math.min(dt || .016, .05);
+          conf = conf.filter(function (q) { q[1] += q[2] * stp * 18; px(ctx, q[0], q[1], q[3]); return q[1] < H; });
+        }
       }
     };
   };
+
 
   function diya(ctx, x, t, seed) {
     var f = .6 + .4 * Math.sin(t * 13 + seed) * Math.sin(t * 7.3 + seed * 2) + Math.random() * .15;

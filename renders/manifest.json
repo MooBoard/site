@@ -1,5 +1,5 @@
 {
-  "note": "Frame counts are 0 until the renders land; the site then falls back to render stills or the live board. screen: where the LED face sits in the last frames (fractions), so the live board can take over. colors/places: which frames show which frame colour or placement (1-based, inclusive).",
+  "note": "Frame counts are 0 until the renders land; the site then falls back to render stills or the live board. screen: where the LED face sits in the last frames (fractions), so the live board can take over. colors/places: which frames show which frame colour or placement (1-based, inclusive). portrait: phone framing, a focus point (x, y) showing share w of the width, eased from the first to the last frame, placed at height 'at'.",
   "sequences": {
     "hero": {
       "dir": "seq-hero",
@@ -43,7 +43,15 @@
           60
         ]
       },
-      "shiftY": 0.1
+      "shiftY": 0.1,
+      "portrait": {
+        "from": {
+          "x": 0.5,
+          "y": 0.42,
+          "w": 0.7
+        },
+        "at": 0.47
+      }
     },
     "room": {
       "dir": "seq-room",
@@ -51,7 +59,20 @@
       "width": 1600,
       "height": 900,
       "ext": "webp",
-      "pad": 4
+      "pad": 4,
+      "portrait": {
+        "from": {
+          "x": 0.45,
+          "y": 0.36,
+          "w": 0.42
+        },
+        "to": {
+          "x": 0.5,
+          "y": 0.44,
+          "w": 0.9
+        },
+        "at": 0.42
+      }
     }
   }
 }

@@ -453,3 +453,31 @@ h1, h2 { font-family: var(--display); font-weight: 600; letter-spacing: -.01em; 
 .room.zoomed .pin { cursor: zoom-out; }
 .room-stills .f169 { transform-origin: 50% 31.5%; transition: transform 1.4s var(--ease); }
 .room.zoomed .room-stills .f169 { transform: scale(3.2); }
+
+/* ---------- phones: room for the player bar, bigger tap targets ---------- */
+@media (max-width: 700px) {
+  :root { --bar: calc(64px + env(safe-area-inset-bottom)); }
+  .foot { padding-bottom: calc(var(--bar) + 36px); }
+  .waitlist { padding-bottom: calc(var(--bar) + 60px); }
+  .pl { width: 44px; height: 44px; }
+  .np { min-height: 48px; }
+  .chip, .sw, .cp, .rt { position: relative; }
+  .chip::before, .sw::before { content: ''; position: absolute; inset: -7px -3px; }
+  .swatches { gap: 14px; }
+  .room-tabs, .colors.has-frames .color-pick { bottom: calc(var(--bar) + 14px); }
+  .colors.has-frames .color-pick { flex-wrap: nowrap; gap: 6px; }
+  .cp { height: 44px; padding: 0 10px 0 5px; gap: 6px; font-size: 12px; }
+  .cp i { width: 32px; height: 32px; }
+  .progress { bottom: calc(var(--bar) + 16px); }
+  .app-row { scroll-padding: 0 var(--gut); }
+  .app-row li { width: 80vw; scroll-snap-align: start; }
+}
+@media (max-width: 380px) {
+  .cp span { font-size: 11px; }
+  .cp { padding-right: 8px; }
+}
+@media (max-width: 700px) and (max-height: 700px) {
+  .hero { padding-top: 76px; }
+  .kicker { margin-top: 6px; }
+  .controls { margin-top: 22px; gap: 10px 16px; }
+}
