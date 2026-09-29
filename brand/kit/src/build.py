@@ -67,7 +67,7 @@ R=[rule(1,'Room to breathe','#EAF6F9',lockup('sky','deep','style="width:62%"')),
    rule(1,'Frame colours','#F5E9D6','<div style="display:flex;gap:6%;width:84%">'+''.join(f'<svg viewBox="0 0 136 112" style="width:25%">{MARK[c]}</svg>' for c in ['sky','black','white','orange'])+'</div>'),
    rule(0,'Stretch','#fff',lockup('sky','deep','style="width:92%;height:22px" preserveAspectRatio="none"')),
    rule(0,'Recolour','#fff',f'<svg viewBox="0 0 136 112" style="width:34%;filter:hue-rotate(150deg) saturate(1.6)">{MARK["sky"]}</svg>'),
-   rule(0,'Low contrast','#7ED9D6',lockup('sky','sky','style="width:62%"')),
+   rule(0,'Low contrast','#77EDD7',lockup('sky','sky','style="width:62%"')),
    rule(0,'Tilt or shadow','#fff',lockup('sky','deep','style="width:58%;transform:rotate(-10deg);filter:drop-shadow(6px 8px 0 rgba(14,26,34,.35))"'))]
 def uri(p,mt): return f'data:{mt};base64,'+b64(p)
 t=open(f'{K}/src/template.html').read()

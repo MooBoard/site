@@ -36,7 +36,7 @@ The four launch frame colours (the product itself):
 | Black | `#17191C` | matte |
 | White | `#F5F3EF` | matte, slightly warm |
 | Orange | `#FF7A21` | bright, not rust |
-| Translucent Teal | `#7ED9D6` at ~55% opacity | frosted, glows where light reaches it |
+| Translucent Teal | `#77EDD7` at ~55% opacity | Bambu PETG Translucent Teal (32501), the filament the owner bought; frosted, glows where light reaches it |
 
 ## Type
 

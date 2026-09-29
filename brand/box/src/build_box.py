@@ -25,7 +25,7 @@ BLEED = 3.0
 # ---------------------------------------------------------------- palette
 SKY, DEEP, INK, MIST, CREAM, PINK = '#3DC4E0', '#0B6E80', '#0E1A22', '#EAF6F9', '#F5E9D6', '#FFB7C9'
 SKY_HI = '#56CDE6'
-FRAMES = [('Black', '#17191C'), ('White', '#F5F3EF'), ('Orange', '#FF7A21'), ('Teal', '#7ED9D6')]
+FRAMES = [('Black', '#17191C'), ('White', '#F5F3EF'), ('Orange', '#FF7A21'), ('Teal', '#77EDD7')]
 UNLIT, PANEL = '#1B1920', '#0A0A0D'
 WARM, WARM_HALO, MARIGOLD = '#FFF3E2', '#FFD49A', '#FFB81C'
 
@@ -221,7 +221,7 @@ def swatches(x, y, d, label_color, box_color, tick=None):
     for i, (name, hexc) in enumerate(FRAMES):
         cx = x + i * pitch + d / 2
         if name == 'Teal':
-            s.append(f'<circle cx="{cx:.2f}" cy="{y + d/2:.2f}" r="{d/2:.2f}" fill="#7ED9D6" fill-opacity="0.75" stroke="#FFFFFF" stroke-width="0.6"/>')
+            s.append(f'<circle cx="{cx:.2f}" cy="{y + d/2:.2f}" r="{d/2:.2f}" fill="#77EDD7" fill-opacity="0.75" stroke="#FFFFFF" stroke-width="0.6"/>')
             s.append(f'<circle cx="{cx - d*0.14:.2f}" cy="{y + d*0.36:.2f}" r="{d*0.16:.2f}" fill="#FFFFFF" opacity="0.55"/>')
         else:
             stroke = ' stroke="#FFFFFF" stroke-width="0.6"' if name != 'White' else f' stroke="{label_color}" stroke-opacity=".25" stroke-width="0.4"'

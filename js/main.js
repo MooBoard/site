@@ -49,6 +49,7 @@ var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
   boards.story = story;
   boards.color = new MB.Board($('#color-board'), { scenes: ['time', 'lyrics', 'art'], onGlow: tileGlow($('#colors')) });
   boards.room = new MB.Board($('#room-board'), { scenes: ['time', 'art', 'weather'], onGlow: tileGlow($('#room')) });
+  boards.roomLive = new MB.Board($('#room-live'), { scenes: ['time', 'weather', 'art'], onGlow: tileGlow($('#room')) });
   boards.wl = new MB.Board($('#wl-board'), { scenes: ['moo', 'time', 'calendar'], onGlow: tileGlow($('#waitlist')) });
 
   $$('.tile').forEach(function (t) {
@@ -61,7 +62,7 @@ var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
 
   /* ---------- frame colours ---------- */
   var FRAMES = ['black', 'white', 'orange', 'teal'];
-  var CBG = { black: '#E9EEF0', white: '#DDE9EC', orange: '#FFE7D6', teal: '#D9F3F2' };
+  var CBG = { black: '#E9EEF0', white: '#DDE9EC', orange: '#FFE7D6', teal: '#D6F7F0' };
   function setHeroFrame(f) {
     $('#hero-bezel').dataset.frame = f;
     $$('.swatches .sw').forEach(function (s) { s.classList.toggle('on', s.dataset.frame === f); });
@@ -76,6 +77,7 @@ var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
     $('#color-bezel').dataset.frame = f;
     $('#colors').style.setProperty('--cbg', CBG[f]);
     $$('.cp').forEach(function (c) { c.classList.toggle('on', c.dataset.frame === f); });
+    $$('.color-stills img').forEach(function (c) { c.classList.toggle('on', c.dataset.frame === f); });
     if (fromUser) setHeroFrame(f);
     pulse($('#color-bezel'));
   }
@@ -123,6 +125,14 @@ var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
       })
       .catch(function () { msg.textContent = 'Could not send. Try again in a moment.'; })
       .then(function () { btn.disabled = false; });
+  });
+
+  /* ---------- render stills (used until the scroll sequences exist) ---------- */
+  $$('.stills').forEach(function (st) {
+    var sec = st.closest('section'), first = $('img', st);
+    if (!first) return;
+    function ok() { sec.classList.add('has-stills'); if (ST) ST.refresh(); }
+    if (first.complete && first.naturalWidth) ok(); else first.addEventListener('load', ok);
   });
 
   /* ---------- scroll-scrubbed render sequences ---------- */
@@ -212,6 +222,8 @@ var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
   }
   function setPlace(p) {
     $('#room .scene').dataset.place = p;
+    $('#room .room-stills').dataset.place = p;
+    $$('#room .room-stills img').forEach(function (c) { c.classList.toggle('on', c.dataset.place === p); });
     $$('.rt').forEach(function (b) { b.classList.toggle('on', b.dataset.place === p); });
   }
 
@@ -329,6 +341,13 @@ var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
     $$('.rt').forEach(function (b) {
       b.addEventListener('click', function () { scrollTo(roomST.start + (roomST.end - roomST.start) * (b.dataset.place === 'wall' ? .2 : .8)); });
     });
+    if (!REDUCED) {
+      gsap.fromTo('.color-stills', { scale: 1.1 }, { scale: 1, ease: 'none', scrollTrigger: { trigger: '#colors', start: 'top top', end: '+=220%', scrub: true } });
+      gsap.fromTo('.room-stills', { scale: 1.14 }, { scale: 1, ease: 'none', scrollTrigger: { trigger: '#room', start: 'top bottom', end: '+=220%', scrub: true } });
+      $$('.card img').forEach(function (im) {
+        gsap.to(im, { scale: 1, yPercent: 4, ease: 'none', scrollTrigger: { trigger: im.parentNode, start: 'top bottom', end: 'bottom top', scrub: true } });
+      });
+    }
     if (!roomSeq && !REDUCED) {
       gsap.fromTo('#room .scene', { scale: 1.12 }, { scale: 1, ease: 'none', scrollTrigger: { trigger: '#room', start: 'top bottom', end: 'top top', scrub: true } });
       gsap.to('#room .plant', { x: -40, ease: 'none', scrollTrigger: { trigger: '#room', start: 'top top', end: '+=170%', scrub: true } });

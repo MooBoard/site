@@ -129,6 +129,12 @@ if (/[?&]debug/.test(location.search)) { window.__err = []; addEventListener('er
   <div class="pin">
     <h2 class="big light" data-reveal>Pick your<br><em>frame.</em></h2>
     <canvas class="seq-canvas" aria-hidden="true"></canvas>
+    <div class="fallback stills color-stills" aria-hidden="true">
+      <img class="on" data-frame="black" src="renders/stills/studio-hero-black.webp" alt="" loading="lazy" decoding="async" width="2400" height="1350">
+      <img data-frame="white" src="renders/stills/studio-hero-white.webp" alt="" loading="lazy" decoding="async" width="2400" height="1350">
+      <img data-frame="orange" src="renders/stills/studio-hero-orange.webp" alt="" loading="lazy" decoding="async" width="2400" height="1350">
+      <img data-frame="teal" src="renders/stills/studio-hero-teal.webp" alt="" loading="lazy" decoding="async" width="2400" height="1350">
+    </div>
     <div class="fallback color-stage" aria-hidden="true">
       <div class="swing">
         <div class="bezel" id="color-bezel" data-frame="black"><div class="led" id="color-board"></div></div>
@@ -146,6 +152,13 @@ if (/[?&]debug/.test(location.search)) { window.__err = []; addEventListener('er
 <section class="room seq" data-seq="room" id="room">
   <div class="pin">
     <canvas class="seq-canvas" aria-hidden="true"></canvas>
+    <div class="fallback stills room-stills" aria-hidden="true">
+      <div class="f169">
+        <img class="on" data-place="wall" src="renders/stills/room-wall.webp" alt="" loading="lazy" decoding="async" width="2400" height="1350">
+        <img data-place="desk" src="renders/stills/room-desk.webp" alt="" loading="lazy" decoding="async" width="2400" height="1350">
+        <div class="live-over"><div class="led" id="room-live"></div></div>
+      </div>
+    </div>
     <div class="fallback scene" aria-hidden="true">
       <div class="wall"></div>
       <div class="lamp"><i></i></div>
@@ -163,11 +176,21 @@ if (/[?&]debug/.test(location.search)) { window.__err = []; addEventListener('er
 </section>
 
 <section class="tech" id="tech">
+  <div class="cards">
+    <figure class="card dark" data-reveal>
+      <img src="renders/stills/closeup-led.webp" alt="Close up of the glowing LEDs" loading="lazy" decoding="async" width="2400" height="1350">
+      <figcaption><b data-count="4096" data-format="comma">4,096</b><span>LEDs</span></figcaption>
+    </figure>
+    <figure class="card light" data-reveal>
+      <img src="renders/stills/bottom-cable.webp" alt="One USB-C cable at the bottom" loading="lazy" decoding="async" width="2400" height="1350">
+      <figcaption><b data-count="1">1</b><span>USB-C cable</span></figcaption>
+    </figure>
+  </div>
   <div class="stats">
-    <div class="stat" data-reveal><b data-count="4096" data-format="comma">4,096</b><span>LEDs</span></div>
     <div class="stat" data-reveal><b>128<small>x</small>32</b><span>pixels</span></div>
-    <div class="stat" data-reveal><b data-count="1">1</b><span>USB-C cable</span></div>
     <div class="stat" data-reveal><b><span data-count="518">518</span><small>mm</small></b><span>wide</span></div>
+    <div class="stat" data-reveal><b>44<small>mm</small></b><span>deep</span></div>
+    <div class="stat" data-reveal><b>4</b><span>frame colours</span></div>
   </div>
   <div class="marquee" aria-hidden="true">
     <div class="track">
