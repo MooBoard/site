@@ -108,9 +108,23 @@ var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
   /* ---------- the cow's eyes ---------- */
   var marks = $$('.mark'), loads = 0;
   // pupils cycle the brand colours while something loads
+  // loading: the pupils blink random rainbow hues every ~100 ms while the mark jitters (CSS), then settle.
+  // the white eye dots always stay white
+  var rainbowT = 0;
+  function eyeDots() { return $$('.mark .pupil'); }
+  function rainbow(on) {
+    clearTimeout(rainbowT);
+    if (!on || REDUCED) { eyeDots().forEach(function (c) { c.style.fill = ''; }); return; }
+    (function hop() {
+      eyeDots().forEach(function (c) {
+        c.style.fill = 'hsl(' + Math.floor(Math.random() * 360) + ', 95%, 55%)';
+      });
+      rainbowT = setTimeout(hop, 80 + Math.random() * 40);
+    })();
+  }
   function busy(p) {
-    loads++; marks.forEach(function (m) { m.classList.add('loading'); });
-    var done = function () { if (--loads <= 0) { loads = 0; marks.forEach(function (m) { m.classList.remove('loading'); }); } };
+    if (++loads === 1) { marks.forEach(function (m) { m.classList.add('loading'); }); rainbow(true); }
+    var done = function () { if (--loads <= 0) { loads = 0; marks.forEach(function (m) { m.classList.remove('loading'); }); rainbow(false); } };
     Promise.resolve(p).then(done, done);
     return p;
   }
@@ -276,7 +290,7 @@ var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
   };
   Seq.prototype.preload = function () {
     if (this.started) return; this.started = true;
-    var fin; busy(new Promise(function (res) { fin = res; }));
+    var fin = function () {};
     var self = this, order = [], seen = {};
     [16, 8, 4, 2, 1].forEach(function (st) { for (var i = 0; i < self.n; i += st) if (!seen[i]) { seen[i] = 1; order.push(i); } });
     var k = 0;
