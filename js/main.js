@@ -242,7 +242,7 @@ var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
     var tc = document.querySelector('meta[name="theme-color"]'); if (tc) tc.content = mixHex(hex, INK, .8);
   }
 
-  var player = $('#player'), plPlay = $('#pl-play'), plMute = $('#pl-mute'), np = $('#np'), card = $('#npcard');
+  var player = $('#player'), plPlay = $('#pl-play'), plMute = $('#pl-mute'), np = $('#np');
   var heldByMusic = false, lastTrack = null;
   function fmt(t) { t = Math.max(0, Math.floor(t)); return Math.floor(t / 60) + ':' + (t % 60 < 10 ? '0' : '') + (t % 60); }
   function musicUI(type) {
@@ -253,20 +253,17 @@ var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
     plMute.classList.toggle('on', !muted); plMute.setAttribute('aria-pressed', !muted); plMute.setAttribute('aria-label', muted ? 'Unmute' : 'Mute');
     $$('.mark').forEach(function (m) { m.classList.toggle('music', audible); });
     setAccent(playing && tr ? tr.tint : MINT);
-    np.classList.toggle('muted', !audible); card.classList.toggle('muted', !audible);
+    np.classList.toggle('muted', !audible);
     if (tr && tr !== lastTrack) {
       lastTrack = tr;
       var cov = M.cover(tr);
       var fill = function () {
         $('.np-cover', np).src = cov; $('.np-t', np).textContent = tr.title; $('.np-a', np).textContent = tr.artist;
-        $('.npc-cover', card).src = cov; $('.npc-bg img', card).src = cov;
-        $('.npc-t', card).textContent = tr.title; $('.npc-a', card).textContent = tr.artist; $('.npc-len', card).textContent = fmt(M.length());
       };
       if (np.classList.contains('show') && !REDUCED) { np.classList.remove('show'); setTimeout(function () { fill(); np.classList.add('show'); }, 380); }
       else { fill(); if (playing) np.classList.add('show'); }
     }
     np.classList.toggle('show', playing && !!tr);
-    card.classList.toggle('show', !!tr);
     if (audible && !heldByMusic) { heldByMusic = true; hero.hold('song'); $$('.chip', chips).forEach(function (c) { var on = c.dataset.scene === 'song'; c.classList.toggle('on', on); c.setAttribute('aria-pressed', on); }); }
     else if (!audible && heldByMusic) { heldByMusic = false; hero.release(); }
   }
@@ -274,16 +271,6 @@ var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
   plPlay.addEventListener('click', function () { var M = window.MooMusic; if (!M) return; if (M.playing()) M.pause(); else M.play(); });
   $('#pl-next').addEventListener('click', function () { if (window.MooMusic) window.MooMusic.next(); });
   plMute.addEventListener('click', function () { var M = window.MooMusic; if (!M) return; if (M.muted()) { M.unmute(); if (!M.playing()) M.play(); } else M.mute(); });
-  // progress on the card
-  (function tickCard() {
-    var M = window.MooMusic;
-    if (M && M.ready() && card.getBoundingClientRect().top < innerHeight && card.getBoundingClientRect().bottom > 0) {
-      var p = M.pos(), L = M.length();
-      $('.npc-bar i', card).style.transform = 'scaleX(' + Math.min(1, p / L).toFixed(4) + ')';
-      $('.npc-cur', card).textContent = fmt(p);
-    }
-    requestAnimationFrame(tickCard);
-  })();
 
   /* ---------- waitlist ---------- */
   var form = $('#wl-form'), msg = $('#wl-msg');
@@ -409,15 +396,22 @@ var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
   /* ---------- static fallbacks (no GSAP) ---------- */
   function wireStatic() {
     $$('.cp').forEach(function (c, i) { c.addEventListener('click', function () { setColor(i, true); }); });
-    $$('.rt').forEach(function (b) { b.addEventListener('click', function () { setPlace(b.dataset.place); }); });
     setColor(0);
   }
-  function setPlace(p) {
-    $('#room .scene').dataset.place = p;
-    $('#room .room-stills').dataset.place = p;
-    $$('#room .room-stills img').forEach(function (c) { c.classList.toggle('on', c.dataset.place === p); });
-    $$('.rt').forEach(function (b) { b.classList.toggle('on', b.dataset.place === p); });
+  // room: loads zoomed out (the whole room); the toggle zooms into the wall board and back out
+  var roomZoomed = false, roomTween = null, roomState = { p: 0 };
+  function roomZoom(on) {
+    roomZoomed = on;
+    var btn = $('#room-zoom'), sec = $('#room');
+    btn.setAttribute('aria-pressed', on); sec.classList.toggle('zoomed', on);
+    var sq = seqs.room;
+    if (!sq) return;
+    if (roomTween) roomTween.kill();
+    if (gsap && !REDUCED) roomTween = gsap.to(roomState, { p: on ? 1 : 0, duration: 1.8, ease: 'power2.inOut', onUpdate: function () { sq.set(roomState.p); } });
+    else { roomState.p = on ? 1 : 0; sq.set(roomState.p); }
   }
+  $('#room-zoom').addEventListener('click', function (e) { e.stopPropagation(); roomZoom(!roomZoomed); });
+  $('#room .pin').addEventListener('click', function () { roomZoom(!roomZoomed); });
 
   /* ---------- motion ---------- */
   function initMotion() {
@@ -548,32 +542,11 @@ var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
       c.addEventListener('click', function () { setHeroFrame(FRAMES[i]); scrollTo(colorST.start + (colorST.end - colorST.start) * rangeProgress(colorSeq, 'colors', FRAMES[i], i, 4)); });
     });
 
-    // room
-    var roomSeq = seqs.room;
-    var roomST = ST.create({
-      trigger: '#room', start: 'top top', end: '+=170%', pin: '#room .pin', scrub: .5,
-      onUpdate: function (self) {
-        var p = self.progress;
-        if (roomSeq) roomSeq.set(p);
-        var place = ['wall', 'desk'][rangeIndex(roomSeq, 'places', ['wall', 'desk'], p)];
-        if ($('#room .scene').dataset.place !== place) setPlace(place);
-      }
-    });
-    setPlace('wall');
-    $$('.rt').forEach(function (b) {
-      b.addEventListener('click', function () { var w = b.dataset.place === 'wall'; scrollTo(roomST.start + (roomST.end - roomST.start) * (roomSeq && roomSeq.spec.places ? rangeProgress(roomSeq, 'places', b.dataset.place, w ? 0 : 1, 2) : (w ? .2 : .8))); });
-    });
     if (!REDUCED) {
       gsap.fromTo('.color-stills', { scale: 1.1 }, { scale: 1, ease: 'none', scrollTrigger: { trigger: '#colors', start: 'top top', end: '+=220%', scrub: true } });
-      gsap.fromTo('.room-stills', { scale: 1.14 }, { scale: 1, ease: 'none', scrollTrigger: { trigger: '#room', start: 'top bottom', end: '+=220%', scrub: true } });
       $$('.card img').forEach(function (im) {
         gsap.to(im, { scale: 1, yPercent: 4, ease: 'none', scrollTrigger: { trigger: im.parentNode, start: 'top bottom', end: 'bottom top', scrub: true } });
       });
-    }
-    if (!roomSeq && !REDUCED) {
-      gsap.fromTo('#room .scene', { scale: 1.12 }, { scale: 1, ease: 'none', scrollTrigger: { trigger: '#room', start: 'top bottom', end: 'top top', scrub: true } });
-      gsap.to('#room .plant', { x: -40, ease: 'none', scrollTrigger: { trigger: '#room', start: 'top top', end: '+=170%', scrub: true } });
-      gsap.to('#room .lamp', { x: 30, ease: 'none', scrollTrigger: { trigger: '#room', start: 'top top', end: '+=170%', scrub: true } });
     }
 
     if (REDUCED) return;

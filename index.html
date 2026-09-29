@@ -162,7 +162,6 @@ if (/[?&]debug/.test(location.search)) { window.__err = []; addEventListener('er
     <div class="fallback stills room-stills" aria-hidden="true">
       <div class="f169">
         <img class="on" data-place="wall" src="renders/stills/room-wall.webp" alt="" loading="lazy" decoding="async" width="2400" height="1350">
-        <img data-place="desk" src="renders/stills/room-desk.webp" alt="" loading="lazy" decoding="async" width="2400" height="1350">
         <div class="live-over"><div class="led" id="room-live"></div></div>
       </div>
     </div>
@@ -175,18 +174,8 @@ if (/[?&]debug/.test(location.search)) { window.__err = []; addEventListener('er
       </div>
       <div class="desk"><div class="mug"></div><div class="books"><i></i><i></i><i></i></div></div>
     </div>
-    <div class="npcard" id="npcard" aria-hidden="true">
-      <div class="npc-bg"><img alt=""></div>
-      <div class="npc-in">
-        <img class="npc-cover" alt="">
-        <div class="npc-meta"><b class="npc-t"></b><span class="npc-a"></span></div>
-        <div class="npc-bar"><i></i></div>
-        <div class="npc-time"><span class="npc-cur">0:00</span><span class="npc-len">0:00</span></div>
-      </div>
-    </div>
-    <div class="room-tabs" role="group" aria-label="Placement">
-      <button class="rt on" data-place="wall">On the wall</button>
-      <button class="rt" data-place="desk">On the desk</button>
+    <div class="room-tabs">
+      <button class="rt" id="room-zoom" type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5"/><path d="M8 10.5h5"/><path class="zv" d="M10.5 8v5"/></svg><span>On the wall</span></button>
     </div>
   </div>
 </section>
