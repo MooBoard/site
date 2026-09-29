@@ -513,7 +513,7 @@
     this.go('moo');
   };
   Board.prototype.render = function (t, dt) {
-    var sc = this.scenes[this.cur], st = Math.max(0, t - this.start);
+    var sc = this.scenes[this.cur], st = this.opts.at != null ? this.opts.at : Math.max(0, t - this.start);
     if (!this.start) { this.start = t; st = 0; }
     var TR = REDUCED ? 0.01 : 0.7;
     var mooBack = this.cur === 'moo' && this.back;

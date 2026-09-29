@@ -1,0 +1,22 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>og</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;700;800;900&family=Silkscreen&display=swap">
+<link rel="stylesheet" href="../css/site.css">
+<style>
+html,body{margin:0;width:1200px;height:630px;overflow:hidden;background:#0E1A22}
+.og{position:relative;width:1200px;height:630px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:54px;
+background:radial-gradient(70% 60% at 50% 70%, rgba(255,120,80,.22), transparent 70%), radial-gradient(120% 80% at 50% 120%, #163642, #0E1A22 60%)}
+.og::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle, rgba(255,255,255,.08) 1.4px, transparent 1.7px);background-size:20px 20px;-webkit-mask-image:radial-gradient(60% 60% at 50% 50%, #000, transparent)}
+.lock{position:relative;display:flex;align-items:center;gap:30px}
+.lock img.m{height:118px}.lock img.w{height:74px}
+.b{position:relative;width:1000px}
+</style></head>
+<body><div class="og">
+<div class="lock"><img class="m" src="../brand/mark-sky.svg"><img class="w" src="../brand/wordmark-white.svg"></div>
+<div class="b"><div class="bezel" data-frame="orange"><div class="led" id="og"></div></div></div>
+</div>
+<script src="../js/board.js"></script>
+<script>
+document.fonts.load('900 13px Nunito').then(function(){ new MooBoard.Board(document.getElementById('og'), { scenes: ['lyrics'], auto: false, at: 3.9, onGlow: function(c){ document.documentElement.style.setProperty('--glow', (c[0]|0)+','+(c[1]|0)+','+(c[2]|0)); } }); });
+</script>
+</body></html>
