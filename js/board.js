@@ -191,21 +191,24 @@
     };
   };
 
-  // the site's own theme song (js/music.js): lyrics light word by word in time with the music
-  function songLine(ctx, words, y, step, pulse) {
-    var font = '900 13px Nunito', line = words.map(function (w) { return w[0]; }).join(' '), x0 = cx(line, font, 64), xe = x0 + measure(line, font).w;
-    var spans = [], acc = '';
+  // the playlist (js/music.js): the current line lights word by word in the track's colour
+  function bright(c) { var m = Math.max(c[0], c[1], c[2], 1); return mul(c, 255 / m); }
+  function songLine(ctx, words, y, p, tint) {
+    var font = '900 13px Nunito', line = words.map(function (w) { return w.text; }).join(' ');
+    var w0 = measure(line, font).w, sz = w0 > 124 ? '900 11px Nunito' : font;
+    if (sz !== font) { font = sz; w0 = measure(line, font).w; }
+    var x0 = cx(line, font, 64), xe = x0 + w0, spans = [], acc = '';
+    var hi = bright(tint || C.marigold), lo = mix(hi, C.white, .55);
     words.forEach(function (w, k) {
-      var st = x0 + (k ? measure(acc + ' ', font).w : 0); acc += (k ? ' ' : '') + w[0];
-      var ws = w[1], we = k + 1 < words.length ? words[k + 1][1] : ws + 4;
-      spans.push([st, x0 + measure(acc, font).w, ws, Math.min(we, ws + 4)]);
+      var st = x0 + (k ? measure(acc + ' ', font).w : 0); acc += (k ? ' ' : '') + w.text;
+      spans.push([st, x0 + measure(acc, font).w, w.t0, Math.min(w.t1, w.t0 + .7)]);
     });
     text(ctx, line, x0, y, function (X) {
       for (var q = 0; q < spans.length; q++) {
         var sp = spans[q];
         if (X >= sp[0] - 1 && X <= sp[1] + 1) {
-          var f = (step - sp[2]) / Math.max(1, sp[3] - sp[2]);
-          if (f >= 1 || (f > 0 && X <= sp[0] + (sp[1] - sp[0]) * f)) return mul(sweep(X, x0, xe), pulse);
+          var f = (p - sp[2]) / Math.max(.05, sp[3] - sp[2]);
+          if (f >= 1 || (f > 0 && X <= sp[0] + (sp[1] - sp[0]) * f)) return mix(lo, hi, clamp((X - x0) / Math.max(1, xe - x0), 0, 1));
           return mul(C.cream, .22);
         }
       }
@@ -214,13 +217,15 @@
   }
   S.song = function () {
     return {
-      label: 'Song', dur: 1e9,
-      draw: function (ctx, t) {
-        var M = window.MooMusic, p = M && M.pos();
-        if (!p) return;
-        var L = M.song, pulse = .8 + .2 * (1 - (p.step % 2) / 2);
-        songLine(ctx, L[p.line].words, 13, p.step, pulse);
-        songLine(ctx, L[(p.line + 1) % L.length].words, 28, -1, 1);
+      label: 'Lyrics', dur: 12,
+      draw: function (ctx) {
+        var M = window.MooMusic, tm = M && M.timing(), tr = M && M.track();
+        if (!tm || !tm.lines || !tm.lines.length) { ctext(ctx, 'MOO', 64, 20, mul(C.cream, .3)); return; }
+        var p = M.pos(), L = tm.lines, li = 0;
+        while (li < L.length - 1 && p >= L[li].t1) li++;
+        var tint = tr && tr.tint ? hexc(tr.tint) : null;
+        songLine(ctx, L[li].words, 13, p, tint);
+        songLine(ctx, (L[li + 1] || L[0]).words, 28, -1, tint);
       }
     };
   };

@@ -21,7 +21,7 @@ var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
   }
 
   /* ---------- boards ---------- */
-  var HERO_SCENES = ['time', 'lyrics', 'art', 'calendar', 'score', 'prayer', 'weather'];
+  var HERO_SCENES = ['time', 'song', 'art', 'calendar', 'score', 'prayer', 'weather'];
   var first = HERO_SCENES.indexOf(params.get('scene'));
   if (first > 0) HERO_SCENES = HERO_SCENES.slice(first).concat(HERO_SCENES.slice(0, first));
   var heroEl = $('#hero-board');
@@ -49,7 +49,7 @@ var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
   boards.story = story;
   boards.color = new MB.Board($('#color-board'), { scenes: ['time', 'lyrics', 'art'], onGlow: tileGlow($('#colors')) });
   boards.room = new MB.Board($('#room-board'), { scenes: ['time', 'art', 'weather'], onGlow: tileGlow($('#room')) });
-  boards.roomLive = new MB.Board($('#room-live'), { scenes: ['time', 'weather', 'art'], onGlow: tileGlow($('#room')) });
+  boards.roomLive = new MB.Board($('#room-live'), { scenes: ['song', 'time', 'weather'], onGlow: tileGlow($('#room')) });
   boards.wl = new MB.Board($('#wl-board'), { scenes: ['moo', 'time', 'calendar'], onGlow: tileGlow($('#waitlist')) });
 
   $$('.tile').forEach(function (t) {
@@ -164,21 +164,69 @@ var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
     });
   }
 
-  /* ---------- sound: the MooBoard song ---------- */
-  var snd = $('#sound');
-  snd.addEventListener('click', function () {
-    var M = window.MooMusic; if (!M) return;
-    var singers = [hero, boards.wl];
-    if (M.playing()) {
-      M.stop(); singers.forEach(function (b) { b.release(); });
-    } else if (M.start()) {
-      singers.forEach(function (b) { b.hold('song'); });
-      $$('.chip', chips).forEach(function (c) { c.classList.remove('on'); c.setAttribute('aria-pressed', 'false'); });
+  /* ---------- music: playlist player, tint, now playing ---------- */
+  var MINT = '#77EDD7', INK = '#0E1A22';
+  function rgbOf(h) { h = h.replace('#', ''); return [parseInt(h.substr(0, 2), 16), parseInt(h.substr(2, 2), 16), parseInt(h.substr(4, 2), 16)]; }
+  function hexOf(c) { return '#' + c.map(function (v) { v = Math.max(0, Math.min(255, Math.round(v))); return (v < 16 ? '0' : '') + v.toString(16); }).join(''); }
+  function mixHex(a, b, t) { var x = rgbOf(a), y = rgbOf(b); return hexOf([x[0] + (y[0] - x[0]) * t, x[1] + (y[1] - x[1]) * t, x[2] + (y[2] - x[2]) * t]); }
+  function lum(h) { return rgbOf(h).map(function (v) { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); }).reduce(function (s, v, i) { return s + v * [.2126, .7152, .0722][i]; }, 0); }
+  function contrast(a, b) { var x = lum(a), y = lum(b); return (Math.max(x, y) + .05) / (Math.min(x, y) + .05); }
+  // the page accent follows the track colour; every text on it keeps AA contrast
+  function setAccent(hex) {
+    var solid = hex, k = 0, text = contrast(hex, INK) >= contrast(hex, '#FFFFFF') ? INK : '#FFFFFF';
+    while (contrast(solid, text) < 4.5 && k++ < 20) solid = mixHex(solid, text === INK ? '#FFFFFF' : '#000000', .06);
+    var lite = hex; k = 0;
+    while (contrast(lite, INK) < 4.5 && k++ < 20) lite = mixHex(lite, '#FFFFFF', .08);
+    root.style.setProperty('--accent', hex);
+    root.style.setProperty('--accent-solid', solid);
+    root.style.setProperty('--accent-ink', text);
+    root.style.setProperty('--accent-lite', lite);
+    root.style.setProperty('--accent-rgb', rgbOf(hex).join(', '));
+    var tc = document.querySelector('meta[name="theme-color"]'); if (tc) tc.content = mixHex(hex, INK, .8);
+  }
+
+  var player = $('#player'), plPlay = $('#pl-play'), plMute = $('#pl-mute'), np = $('#np'), card = $('#npcard');
+  var heldByMusic = false, lastTrack = null;
+  function fmt(t) { t = Math.max(0, Math.floor(t)); return Math.floor(t / 60) + ':' + (t % 60 < 10 ? '0' : '') + (t % 60); }
+  function musicUI(type) {
+    var M = window.MooMusic; if (!M || !M.ready()) return;
+    var tr = M.track(), playing = M.playing(), muted = M.muted(), audible = playing && !muted;
+    player.classList.toggle('paused', !playing);
+    plPlay.setAttribute('aria-label', playing ? 'Pause' : 'Play');
+    plMute.classList.toggle('on', !muted); plMute.setAttribute('aria-pressed', !muted); plMute.setAttribute('aria-label', muted ? 'Unmute' : 'Mute');
+    $$('.mark').forEach(function (m) { m.classList.toggle('music', audible); });
+    setAccent(playing && tr ? tr.tint : MINT);
+    np.classList.toggle('muted', !audible); card.classList.toggle('muted', !audible);
+    if (tr && tr !== lastTrack) {
+      lastTrack = tr;
+      var cov = M.cover(tr);
+      var fill = function () {
+        $('.np-cover', np).src = cov; $('.np-t', np).textContent = tr.title; $('.np-a', np).textContent = tr.artist;
+        $('.npc-cover', card).src = cov; $('.npc-bg img', card).src = cov;
+        $('.npc-t', card).textContent = tr.title; $('.npc-a', card).textContent = tr.artist; $('.npc-len', card).textContent = fmt(M.length());
+      };
+      if (np.classList.contains('show') && !REDUCED) { np.classList.remove('show'); setTimeout(function () { fill(); np.classList.add('show'); }, 380); }
+      else { fill(); if (playing) np.classList.add('show'); }
     }
-    var on = M.playing();
-    snd.classList.toggle('on', on); snd.setAttribute('aria-pressed', on);
-    snd.setAttribute('aria-label', on ? 'Mute the MooBoard song' : 'Play the MooBoard song');
-  });
+    np.classList.toggle('show', playing && !!tr);
+    card.classList.toggle('show', !!tr);
+    if (audible && !heldByMusic) { heldByMusic = true; hero.hold('song'); $$('.chip', chips).forEach(function (c) { var on = c.dataset.scene === 'song'; c.classList.toggle('on', on); c.setAttribute('aria-pressed', on); }); }
+    else if (!audible && heldByMusic) { heldByMusic = false; hero.release(); }
+  }
+  addEventListener('moomusic', function (e) { musicUI(e.detail.type); });
+  plPlay.addEventListener('click', function () { var M = window.MooMusic; if (!M) return; if (M.playing()) M.pause(); else M.play(); });
+  $('#pl-next').addEventListener('click', function () { if (window.MooMusic) window.MooMusic.next(); });
+  plMute.addEventListener('click', function () { var M = window.MooMusic; if (!M) return; if (M.muted()) { M.unmute(); if (!M.playing()) M.play(); } else M.mute(); });
+  // progress on the card
+  (function tickCard() {
+    var M = window.MooMusic;
+    if (M && M.ready() && card.getBoundingClientRect().top < innerHeight && card.getBoundingClientRect().bottom > 0) {
+      var p = M.pos(), L = M.length();
+      $('.npc-bar i', card).style.transform = 'scaleX(' + Math.min(1, p / L).toFixed(4) + ')';
+      $('.npc-cur', card).textContent = fmt(p);
+    }
+    requestAnimationFrame(tickCard);
+  })();
 
   /* ---------- waitlist ---------- */
   var form = $('#wl-form'), msg = $('#wl-msg');

@@ -151,6 +151,15 @@ if (/[?&]debug/.test(location.search)) { window.__err = []; addEventListener('er
       </div>
       <div class="desk"><div class="mug"></div><div class="books"><i></i><i></i><i></i></div></div>
     </div>
+    <div class="npcard" id="npcard" aria-hidden="true">
+      <div class="npc-bg"><img alt=""></div>
+      <div class="npc-in">
+        <img class="npc-cover" alt="">
+        <div class="npc-meta"><b class="npc-t"></b><span class="npc-a"></span></div>
+        <div class="npc-bar"><i></i></div>
+        <div class="npc-time"><span class="npc-cur">0:00</span><span class="npc-len">0:00</span></div>
+      </div>
+    </div>
     <div class="room-tabs" role="group" aria-label="Placement">
       <button class="rt on" data-place="wall">On the wall</button>
       <button class="rt" data-place="desk">On the desk</button>
@@ -211,10 +220,18 @@ if (/[?&]debug/.test(location.search)) { window.__err = []; addEventListener('er
 
 <div class="moo-pop" id="moo-pop" aria-hidden="true">moo</div>
 
-<button class="sound" id="sound" type="button" aria-pressed="false" aria-label="Play the MooBoard song">
-  <svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M3.5 9.2h3.8L12 5.4v13.2l-4.7-3.8H3.5z"/><g class="waves"><path d="M15.2 9.4a3.8 3.8 0 0 1 0 5.2"/><path d="M17.9 6.8a7.6 7.6 0 0 1 0 10.4"/></g><g class="x"><path d="M15.5 9.5l5 5M20.5 9.5l-5 5"/></g></svg>
-  <span class="eq" aria-hidden="true"><i></i><i></i><i></i></span>
-</button>
+<div class="player" id="player" role="group" aria-label="Music">
+  <button class="pl" id="pl-play" type="button" aria-label="Pause">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><g class="i-pause"><rect x="6.5" y="5.5" width="3.8" height="13" rx="1.2"/><rect x="13.7" y="5.5" width="3.8" height="13" rx="1.2"/></g><path class="i-play" d="M8.5 5.8v12.4a.8.8 0 0 0 1.2.7l9.6-6.2a.8.8 0 0 0 0-1.4L9.7 5.1a.8.8 0 0 0-1.2.7z"/></svg>
+  </button>
+  <button class="pl" id="pl-next" type="button" aria-label="Next track">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 6.3v11.4a.8.8 0 0 0 1.2.7l8.6-5.7a.8.8 0 0 0 0-1.4L6.7 5.6a.8.8 0 0 0-1.2.7z"/><rect x="16.2" y="5.5" width="3" height="13" rx="1.2"/></svg>
+  </button>
+  <button class="pl pl-mute" id="pl-mute" type="button" aria-pressed="false" aria-label="Unmute">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M3.5 9.2h3.8L12 5.4v13.2l-4.7-3.8H3.5z"/><g class="waves"><path d="M15.2 9.4a3.8 3.8 0 0 1 0 5.2"/><path d="M17.9 6.8a7.6 7.6 0 0 1 0 10.4"/></g><g class="x"><path d="M15.5 9.5l5 5M20.5 9.5l-5 5"/></g></svg>
+  </button>
+</div>
+<div class="np" id="np" aria-live="polite"><img class="np-cover" alt="" width="36" height="36"><span class="np-txt"><span class="np-t"></span><span class="np-a"></span></span><i class="np-eq" aria-hidden="true"><b></b><b></b><b></b></i></div>
 
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" defer></script>
