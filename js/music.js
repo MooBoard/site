@@ -1,25 +1,72 @@
-/* MooBoard playlist player.
-   Reads music/playlist.json. Starts playing on load but muted: the lyrics run on the board from the first second,
-   sound comes on only when the visitor unmutes. A track with an audio file ("src") plays that file; a track with
-   "src": null plays its placeholder melody live through Web Audio ("synth" block, all original). */
+/* MooBoard radio.
+   Reads music/radio.json (made by tools/make-radio.py): five songs played as Apple Music's 30 s previews, each fading
+   in and crossfading into the next like a radio station. The site hosts no audio and no lyrics: previews stream from
+   Apple, synced lyrics come from lrclib.net and stay in this browser's localStorage after the first visit.
+   Starts playing on load but muted: the lyrics run on the board from the first second, sound comes on only when the
+   visitor unmutes. If the radio can't load, the archived placeholder songs (music/archive/, all original, played live
+   through Web Audio from their "synth" block) play instead. */
 (function () {
   'use strict';
 
   var list = [], idx = 0, playing = false, muted = true, startAt = 0, pausedPos = 0, ready = false;
-  var timings = {}, audioEl = null;
+  var timings = {}, audioEl = null, live = false, els = {}, XF = 2.2;
   var ac = null, bus = null, noiseBuf = null, gen = 0, timer = 0, events = null, evI = 0;
 
   function emit(type) { window.dispatchEvent(new CustomEvent('moomusic', { detail: { type: type } })); }
   function track() { return list[idx]; }
-  function length() { var t = track(); return t ? (t.synth && t.synth.length) || (timings[t.id] && timings[t.id].length) || 25 : 25; }
+  function length() {
+    var t = track();
+    if (t && t.src && live && audioEl.duration) return audioEl.duration;
+    return t ? (t.synth && t.synth.length) || (timings[t.id] && timings[t.id].length) || (t.src ? 30 : 25) : 25;
+  }
   function pos() {
     var t = track();
-    if (t && t.src && audioEl) return audioEl.currentTime;
+    // browsers won't start audio before the visitor taps, so until then the radio runs on the clock
+    if (t && t.src && live) return audioEl.currentTime;
     return playing ? (performance.now() - startAt) / 1000 : pausedPos;
+  }
+
+  /* ---------- radio lyrics: lrclib.net LRC, shifted onto the preview, words placed on Whisper's onsets ---------- */
+  var LRC_API = 'https://lrclib.net/api/get/';
+  function lrcText(id) {
+    var key = 'moo-lrc-' + id;
+    try { var c = localStorage.getItem(key); if (c) return Promise.resolve(c); } catch (e) { /* storage blocked */ }
+    return fetch(LRC_API + id).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
+      var s = j && j.syncedLyrics;
+      if (s) try { localStorage.setItem(key, s); } catch (e) { /* storage full or blocked */ }
+      return s || null;
+    });
+  }
+  function radioTiming(t, lrc) {
+    var raw = [], m, re = /\[(\d+):(\d+(?:\.\d+)?)\]([^\n\r]*)/g, len = 30;
+    while ((m = re.exec(lrc))) raw.push({ t0: +m[1] * 60 + +m[2] - t.at, text: m[3].trim() });
+    raw.sort(function (a, b) { return a.t0 - b.t0; });
+    raw.forEach(function (l, i) { l.t1 = raw[i + 1] ? raw[i + 1].t0 : l.t0 + 5; });
+    var on = t.onsets || [], oi = 0, L = [];
+    raw.forEach(function (l) {
+      if (!l.text || l.t0 < -.5 || l.t0 >= len - .5) return;
+      var parts = l.text.split(/\s+/), n = parts.length, got = [];
+      while (oi < on.length && on[oi] < l.t0 - .6) oi++;
+      while (oi < on.length && on[oi] < l.t1 - .15 && got.length < n) got.push(on[oi++]);
+      while (oi < on.length && on[oi] < l.t1 - .15) oi++; // extra onsets Whisper split out of one word
+      // words Whisper didn't catch share what's left of the line after the last one it did
+      var had = got.length, from = had ? got[had - 1] : l.t0, rest = n - had, step = Math.min(.42, (l.t1 - from) / (rest + 1));
+      for (var k = 0; k < rest; k++) got.push(from + step * (had ? k + 1 : k));
+      var words = parts.map(function (w, k) { return { text: w, t0: got[k] }; });
+      words.forEach(function (w, k) { w.t1 = words[k + 1] ? words[k + 1].t0 : Math.min(l.t1, w.t0 + .7); });
+      L.push({ text: l.text, words: words, t0: words[0].t0, t1: l.t1 });
+    });
+    L.forEach(function (l, i) { if (L[i + 1]) l.t1 = Math.min(l.t1, L[i + 1].t0); });
+    return { title: t.title, artist: t.artist, length: len, lines: L };
   }
 
   /* ---------- lyrics timing ---------- */
   function loadTiming(t) {
+    if (t && t.lrclib && !timings[t.id]) {
+      return (t._lrc || (t._lrc = lrcText(t.lrclib))).then(function (s) {
+        return s ? (timings[t.id] = radioTiming(t, s)) : null;
+      }).catch(function () { return null; });
+    }
     if (!t || !t.lyrics || timings[t.id]) return Promise.resolve(timings[t && t.id]);
     return fetch(t.lyrics).then(function (r) { return r.ok ? r.json() : null; })
       .then(function (j) {
@@ -148,74 +195,105 @@
   }
 
   /* ---------- transport ---------- */
-  function play(i, at) {
+  // one <audio> per radio song, made up front so every preview is buffered before its turn
+  function el(t) {
+    var a = els[t.id];
+    if (a) return a;
+    a = els[t.id] = new Audio(); a.preload = 'auto'; a.src = t.src; a.muted = muted;
+    a.addEventListener('ended', function () { if (a === audioEl && playing) play(idx + 1, 0, 0); });
+    a.addEventListener('playing', function () { if (a === audioEl) live = true; });
+    return a;
+  }
+  // volume ramps (iOS ignores volume; there the songs simply cut over)
+  function ramp(a, to, dur, done) {
+    clearInterval(a._ramp);
+    var from = a.volume, t0 = performance.now();
+    if (!dur) { a.volume = to; if (done) done(); return; }
+    a._ramp = setInterval(function () {
+      var k = Math.min(1, (performance.now() - t0) / (dur * 1000));
+      a.volume = Math.max(0, Math.min(1, from + (to - from) * k));
+      if (k >= 1) { clearInterval(a._ramp); if (done) done(); }
+    }, 30);
+  }
+  // xf: seconds to crossfade from the song that was playing (the radio hand-over); 0 for a skip or a resume
+  function play(i, at, xf) {
     stopSynth();
+    var old = audioEl;
     idx = (i + list.length) % list.length; at = at || 0;
     var t = track();
     loadTiming(t).then(function () { emit('timing'); });
     loadTiming(list[(idx + 1) % list.length]);
     playing = true; startAt = performance.now() - at * 1000;
     if (t.src) {
-      if (!audioEl) { audioEl = new Audio(); audioEl.preload = 'auto'; audioEl.addEventListener('ended', next); }
-      audioEl.src = t.src; audioEl.muted = muted;
+      audioEl = el(t); audioEl.muted = muted;
       try { audioEl.currentTime = at; } catch (e) { /* not seekable yet */ }
-      var pr = audioEl.play(); if (pr && pr.catch) pr.catch(function () {});
+      ramp(audioEl, at ? 1 : 0, 0);
+      start(audioEl);
+      if (!at) ramp(audioEl, 1, xf || .8);
     } else {
-      if (audioEl) audioEl.pause();
+      audioEl = null;
       if (!muted) startSynth(at);
     }
+    if (old && old !== audioEl) ramp(old, 0, xf || .25, function () { if (old !== audioEl) { old.pause(); try { old.currentTime = 0; } catch (e) { /* ignore */ } } });
     emit('track');
   }
-  function next() { play(idx + 1, 0); }
+  function start(a) {
+    live = !a.paused;
+    var pr = a.play();
+    if (pr && pr.then) pr.then(function () { if (a === audioEl) live = true; }, function () { if (a === audioEl) live = false; });
+    else live = true;
+  }
+  function next() { play(idx + 1, 0, 0); }
   function pause() {
     if (!playing) return;
-    pausedPos = pos(); playing = false; stopSynth();
-    if (audioEl) audioEl.pause();
+    pausedPos = pos(); playing = false; live = false; stopSynth();
+    Object.keys(els).forEach(function (k) { els[k].pause(); });
     emit('state');
   }
-  function resume() { if (!playing) play(idx, pausedPos); emit('state'); }
+  function resume() { if (!playing) play(idx, pausedPos, 0); emit('state'); }
   function setMuted(m) {
     muted = m;
     var t = track();
-    if (audioEl) audioEl.muted = m;
+    Object.keys(els).forEach(function (k) { els[k].muted = m; });
     if (m) stopSynth();
-    else { ensureAudio(); if (playing && t && !t.src) startSynth(pos()); }
+    else {
+      ensureAudio();
+      if (playing && t && !t.src) startSynth(pos());
+      // the unmute tap is what lets the preview start: join the clock where the lyrics are
+      if (playing && t && t.src && !live) { var p = pos(); try { audioEl.currentTime = p; } catch (e) { /* ignore */ } ramp(audioEl, 1, .5); start(audioEl); }
+    }
     emit('state');
   }
 
   setInterval(function () {
     if (!ready || !playing) return;
     var t = track();
-    if (!(t && t.src) && pos() >= length()) next();
+    if (t && t.src) { if (pos() >= length() - XF) play(idx + 1, 0, XF); }
+    else if (pos() >= length()) next();
   }, 100);
 
   document.addEventListener('visibilitychange', function () {
     if (ac && !muted) { if (document.hidden) ac.suspend(); else ac.resume(); }
   });
 
-  // Local mode: the owner's own files in local-music/ (never committed, see .gitignore) replace the archive.
-  var LOCAL = [['red', 'Red'], ['yellow', 'Yellow'], ['blue', 'Blue'], ['violet', 'Violet'], ['waves', 'Waves', 'heat']];
-  function localList(archive) {
-    // Only a copy served from this machine or the home network has local-music/; the public site never probes for it.
-    if (!/^(localhost|127\.0\.0\.1|\[::1\]|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|.*\.local$)/.test(location.hostname)) return Promise.resolve([]);
-    var tint = {};
-    archive.forEach(function (t) { tint[t.id] = t.tint; });
-    return Promise.all(LOCAL.map(function (l) {
-      var src = 'local-music/' + l[0] + '.mp3';
-      return fetch(src, { method: 'HEAD' }).then(function (r) {
-        return r.ok ? { id: 'local-' + l[0], title: l[1], artist: 'MooBoard', tint: tint[l[2] || l[0]], src: src, lyrics: null } : null;
-      }).catch(function () { return null; });
-    })).then(function (ts) { return ts.filter(Boolean); });
-  }
-
-  fetch('music/archive/playlist.json').then(function (r) { return r.ok ? r.json() : []; }).then(function (j) {
-    var archive = Array.isArray(j) ? j : (j.tracks || []);
-    return localList(archive).then(function (local) { return local.length ? local : archive; });
+  function json(u) { return fetch(u).then(function (r) { return r.ok ? r.json() : null; }); }
+  function tracksOf(j) { return j ? (Array.isArray(j) ? j : (j.tracks || [])) : []; }
+  // the radio, or the archive if the radio can't load; playback starts once the first song's audio and lyrics are in
+  var loaded = json('music/radio.json').then(tracksOf, function () { return []; }).then(function (radio) {
+    return radio.length ? radio : json('music/archive/playlist.json').then(tracksOf);
   }).then(function (tracks) {
     list = tracks;
     if (!list.length) return;
-    ready = true;
-    play(0, 0);
+    list.forEach(function (t) { if (t.src) el(t); loadTiming(t); });
+    var first = list[0], audio = !first.src ? null : new Promise(function (res) {
+      var a = el(first);
+      if (a.readyState >= 3) res(); else { a.addEventListener('canplaythrough', res); a.addEventListener('error', res); }
+    });
+    var wait = new Promise(function (res) { setTimeout(res, 4000); });
+    return Promise.race([Promise.all([audio, loadTiming(first)]), wait]).then(function () {
+      ready = true;
+      play(0, 0, 0);
+    });
   }).catch(function () {});
 
   /* ---------- cover art: abstract gradients, soft shapes, grain. No text. ---------- */
@@ -225,6 +303,7 @@
   function mixc(a, b, t) { return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]; }
   function cover(t, size) {
     if (!t) return '';
+    if (t.art) return t.art;
     if (covers[t.id]) return covers[t.id];
     size = size || 480;
     var cv = document.createElement('canvas'); cv.width = cv.height = size;
@@ -268,6 +347,7 @@
     cover: cover,
     list: function () { return list; },
     ready: function () { return ready; },
+    loaded: loaded,
     playing: function () { return playing; },
     muted: function () { return muted; },
     track: track,

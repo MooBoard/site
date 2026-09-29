@@ -378,6 +378,7 @@ h1, h2 { font-family: var(--display); font-weight: 600; letter-spacing: -.01em; 
   opacity: 0; transform: translateY(24px); pointer-events: none; transition: opacity .45s var(--ease), transform .45s var(--ease), box-shadow .8s;
 }
 .np.show { opacity: 1; transform: none; }
+.np.show.linked { pointer-events: auto; cursor: pointer; }
 .np-txt { display: flex; flex-direction: column; min-width: 0; line-height: 1.15; }
 .np-t { font-family: var(--display); font-weight: 600; font-size: 15px; color: var(--accent-lite); white-space: nowrap; overflow: hidden; text-overflow: clip; }
 .np-a { font-size: 12px; font-weight: 700; color: rgba(255, 255, 255, .62); white-space: nowrap; }

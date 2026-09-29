@@ -259,6 +259,10 @@ var FORMSPREE_ID = "xjyklakl"; // set to the Formspree form id to open the waitl
       var cov = M.cover(tr);
       var fill = function () {
         $('.np-cover', np).src = cov; $('.np-t', np).textContent = tr.title; $('.np-a', np).textContent = tr.artist;
+        // radio songs are Apple Music previews: the card links to the song there
+        np.classList.toggle('linked', !!tr.link);
+        if (tr.link) { np.setAttribute('role', 'link'); np.tabIndex = 0; np.title = tr.title + ' on Apple Music'; }
+        else { np.removeAttribute('role'); np.removeAttribute('tabindex'); np.removeAttribute('title'); }
       };
       if (np.classList.contains('show') && !REDUCED) { np.classList.remove('show'); setTimeout(function () { fill(); np.classList.add('show'); }, 380); }
       else { fill(); if (playing) np.classList.add('show'); }
@@ -268,6 +272,13 @@ var FORMSPREE_ID = "xjyklakl"; // set to the Formspree form id to open the waitl
     else if (!audible && heldByMusic) { heldByMusic = false; hero.release(); }
   }
   addEventListener('moomusic', function (e) { musicUI(e.detail.type); });
+  function openSong(e) {
+    var M = window.MooMusic, tr = M && M.track();
+    if (!tr || !tr.link || (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ')) return;
+    e.preventDefault(); window.open(tr.link, '_blank', 'noopener');
+  }
+  np.addEventListener('click', openSong); np.addEventListener('keydown', openSong);
+  if (window.MooMusic && window.MooMusic.loaded) busy(window.MooMusic.loaded);
   plPlay.addEventListener('click', function () { var M = window.MooMusic; if (!M) return; if (M.playing()) M.pause(); else M.play(); });
   $('#pl-next').addEventListener('click', function () { if (window.MooMusic) window.MooMusic.next(); });
   plMute.addEventListener('click', function () { var M = window.MooMusic; if (!M) return; if (M.muted()) { M.unmute(); if (!M.playing()) M.play(); } else M.mute(); });
