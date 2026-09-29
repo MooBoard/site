@@ -193,8 +193,24 @@
     if (ac && !muted) { if (document.hidden) ac.suspend(); else ac.resume(); }
   });
 
+  // Local mode: the owner's own files in local-music/ (never committed, see .gitignore) replace the archive.
+  var LOCAL = [['red', 'Red'], ['yellow', 'Yellow'], ['blue', 'Blue'], ['violet', 'Violet'], ['waves', 'Waves', 'heat']];
+  function localList(archive) {
+    var tint = {};
+    archive.forEach(function (t) { tint[t.id] = t.tint; });
+    return Promise.all(LOCAL.map(function (l) {
+      var src = 'local-music/' + l[0] + '.mp3';
+      return fetch(src, { method: 'HEAD' }).then(function (r) {
+        return r.ok ? { id: 'local-' + l[0], title: l[1], artist: 'MooBoard', tint: tint[l[2] || l[0]], src: src, lyrics: null } : null;
+      }).catch(function () { return null; });
+    })).then(function (ts) { return ts.filter(Boolean); });
+  }
+
   fetch('music/archive/playlist.json').then(function (r) { return r.ok ? r.json() : []; }).then(function (j) {
-    list = Array.isArray(j) ? j : (j.tracks || []);
+    var archive = Array.isArray(j) ? j : (j.tracks || []);
+    return localList(archive).then(function (local) { return local.length ? local : archive; });
+  }).then(function (tracks) {
+    list = tracks;
     if (!list.length) return;
     ready = true;
     play(0, 0);
