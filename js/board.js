@@ -442,15 +442,15 @@
 
   // the MooBoard mark is itself a 20 x 16 grid of LED dots, so it maps straight onto the panel
   var MARK = [
-    '......cc....cc......',
-    '......cc....cc......',
+    '.......c....c.......',
+    '.......c....c.......',
     '.....ssssssssss.....',
     'sss.ssssssssssss.sss',
     'sppss.kkkkkkkk.sspps',
     'ssssskkkkkkkkkksssss',
-    '...sskwwwkkwwwkss...',
+    '...sskkwkkkkwkkss...',
     '...sskwowkkwowkss...',
-    '...sskwwwkkwwwkss...',
+    '...sskkwkkkkwkkss...',
     '...sskkkkkkkkkkss...',
     '...sskkppppppkkss...',
     '...sskkpkppkpkkss...',
@@ -461,11 +461,12 @@
   ];
   var MARKC = { c: C.cream, p: [255, 150, 185], w: C.white, o: C.white };
   function drawMark(ctx, x0, y0, k, t, frame) {
-    var look = Math.round(Math.sin(t * .9) * 1.2), blink = (t % 3.7) < .14, flap = Math.sin(t * 1.3) > .4 && Math.sin(t * 14) > 0 ? 1 : 0;
+    var look = 0, blink = (t % 3.7) < .14, flap = Math.sin(t * 1.3) > .4 && Math.sin(t * 14) > 0 ? 1 : 0;
     for (var r = 0; r < 16; r++) for (var c = 0; c < 20; c++) {
       var ch = MARK[r][c];
       if (ch === '.' || ch === 'k') continue;
       if (blink && (ch === 'w' || ch === 'o') && r !== 7) continue;
+      if (ch === 'o') { rect(ctx, x0 + c * k, y0 + r * k, k, k, C.white); continue; }
       var col = ch === 's' ? frame : MARKC[ch], yo = (r >= 3 && r <= 5 && (c < 3 || c > 16)) ? -flap : 0;
       rect(ctx, x0 + c * k, y0 + (r + yo) * k, k, k, col);
     }
