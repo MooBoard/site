@@ -129,7 +129,7 @@ var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
     var cols = ['#3DC4E0', '#FFB81C', '#FF2E88', '#FF7A21', '#FFB7C9', '#77EDD7', '#F5E9D6'], ps = [];
     for (var i = 0; i < 160; i++) {
       var a = -Math.PI / 2 + (Math.random() - .5) * 2.4, v = (6 + Math.random() * 12) * dpr;
-      ps.push({ x: ox, y: oy, vx: Math.cos(a) * v, vy: Math.sin(a) * v, c: cols[i % cols.length], s: (3 + Math.random() * 5) * dpr, dot: Math.random() < .55, rot: Math.random() * 6, vr: (Math.random() - .5) * .4 });
+      ps.push({ x: ox, y: oy, vx: Math.cos(a) * v, vy: Math.sin(a) * v, c: cols[i % cols.length], s: (4 + Math.random() * 7) * dpr, dot: Math.random() < .55, rot: Math.random() * 6, vr: (Math.random() - .5) * .4 });
     }
     var t0 = performance.now();
     (function frame(now) {
@@ -241,6 +241,7 @@ var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
       var x = c.getContext('2d'); x.drawImage(img, 2, 2, 1, 1, 0, 0, 1, 1);
       var d = x.getImageData(0, 0, 1, 1).data;
       section.style.background = 'rgb(' + d[0] + ',' + d[1] + ',' + d[2] + ')';
+      section.classList.toggle('on-light', d[0] * .3 + d[1] * .59 + d[2] * .11 > 150);
     } catch (e) { /* keep css background */ }
   }
 

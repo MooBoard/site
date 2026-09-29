@@ -7,10 +7,8 @@ def inner(name):
 MARK = {c: inner(f'mark-{c}.svg') for c in ['sky','black','white','orange','teal']}
 SKY='#3DC4E0'
 def placed(markinner, cx, cy, s):
-    # the pixel mark: a 20 x 16 dot grid, centre (10, 8); s is the old smooth mark's scale, so the pixel mark
-    # keeps the same visual size (the smooth mark was ~132 units wide, the grid is 20)
-    k = s * 6.6
-    return f'<g transform="translate({cx-10*k:.2f},{cy-8*k:.2f}) scale({k:.4f})">{markinner}</g>'
+    # the onesie mark: viewBox 136 x 108, centre (68, 56)
+    return f'<g transform="translate({cx-68*s:.2f},{cy-56*s:.2f}) scale({s:.4f})">{markinner}</g>'
 def svg(w,h,body): return f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {w} {h}" width="{w}" height="{h}">{body}</svg>\n'
 glow = '<defs><radialGradient id="g" cx="50%" cy="42%" r="70%"><stop offset="0" stop-color="#6ED6EA"/><stop offset="1" stop-color="#3DC4E0"/></radialGradient></defs>'
 # App icon, full bleed

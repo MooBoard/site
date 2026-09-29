@@ -340,3 +340,6 @@ h1, h2 { font-family: var(--display); font-weight: 600; letter-spacing: -.01em; 
   .mark.loading .pupil { fill: #FFB81C; }
   .mark.happy .pupil { fill: #FF2E88; }
 }
+.on-light .cap { color: var(--ink); text-shadow: 0 4px 30px rgba(255, 255, 255, .6); }
+.on-light .progress { background: rgba(14, 26, 34, .12); }
+.on-light .pin::before, .on-light .pin::after { display: none; }
