@@ -23,7 +23,7 @@ DUST = 55.0                       # lid dust flap depth
 BLEED = 3.0
 
 # ---------------------------------------------------------------- palette
-SKY, DEEP, INK, MIST, CREAM, PINK = '#3DC4E0', '#0B6E80', '#0E1A22', '#EAF6F9', '#F5E9D6', '#FFB7C9'
+SKY, DEEP, INK, MIST, CREAM, PINK = '#77EDD7', '#0E6B5E', '#0E1A22', '#E9FBF7', '#F5E9D6', '#FFB7C9'
 SKY_HI = '#56CDE6'
 FRAMES = [('Black', '#17191C'), ('White', '#F5F3EF'), ('Orange', '#FF7A21'), ('Teal', '#77EDD7')]
 UNLIT, PANEL = '#1B1920', '#0A0A0D'

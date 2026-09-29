@@ -62,7 +62,7 @@ var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
 
   /* ---------- frame colours ---------- */
   var FRAMES = ['black', 'white', 'orange', 'teal'];
-  var CBG = { black: '#E9EEF0', white: '#DDE9EC', orange: '#FFE7D6', teal: '#D6F7F0' };
+  var CBG = { black: '#E9FBF7', white: '#E3F2EE', orange: '#FFE7D6', teal: '#D5F8EF' };
   function setHeroFrame(f) {
     $('#hero-bezel').dataset.frame = f;
     $$('.swatches .sw').forEach(function (s) { s.classList.toggle('on', s.dataset.frame === f); });
@@ -126,7 +126,7 @@ var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
     cv.className = 'confetti'; cv.width = innerWidth * dpr; cv.height = innerHeight * dpr; document.body.appendChild(cv);
     var x = cv.getContext('2d'), r = from ? from.getBoundingClientRect() : { left: innerWidth / 2, top: innerHeight / 2, width: 0, height: 0 };
     var ox = (r.left + r.width / 2) * dpr, oy = (r.top + r.height / 2) * dpr;
-    var cols = ['#3DC4E0', '#FFB81C', '#FF2E88', '#FF7A21', '#FFB7C9', '#77EDD7', '#F5E9D6'], ps = [];
+    var cols = ['#77EDD7', '#FFB81C', '#FF2E88', '#FF7A21', '#FFB7C9', '#77EDD7', '#F5E9D6', '#FFFFFF'], ps = [];
     for (var i = 0; i < 160; i++) {
       var a = -Math.PI / 2 + (Math.random() - .5) * 2.4, v = (6 + Math.random() * 12) * dpr;
       ps.push({ x: ox, y: oy, vx: Math.cos(a) * v, vy: Math.sin(a) * v, c: cols[i % cols.length], s: (4 + Math.random() * 7) * dpr, dot: Math.random() < .55, rot: Math.random() * 6, vr: (Math.random() - .5) * .4 });
@@ -158,11 +158,27 @@ var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
           if (r.bottom < 0 || r.top > innerHeight) return;
           var dx = px - (r.left + r.width / 2), dy = py - (r.top + r.height * .45), d = Math.hypot(dx, dy) || 1;
           var sx = d < 30 ? 0 : Math.round(dx / d * 1.3), sy = d < 30 ? 0 : Math.round(dy / d * 1.3);
-          p.style.transform = 'translate(' + Math.max(-1, Math.min(1, sx)) + 'px,' + Math.max(-1, Math.min(1, sy)) + 'px)';
+          p.style.transform = 'translate(' + 4 * Math.max(-1, Math.min(1, sx)) + 'px,' + 4 * Math.max(-1, Math.min(1, sy)) + 'px)';
         });
       });
     });
   }
+
+  /* ---------- sound: the MooBoard song ---------- */
+  var snd = $('#sound');
+  snd.addEventListener('click', function () {
+    var M = window.MooMusic; if (!M) return;
+    var singers = [hero, boards.wl];
+    if (M.playing()) {
+      M.stop(); singers.forEach(function (b) { b.release(); });
+    } else if (M.start()) {
+      singers.forEach(function (b) { b.hold('song'); });
+      $$('.chip', chips).forEach(function (c) { c.classList.remove('on'); c.setAttribute('aria-pressed', 'false'); });
+    }
+    var on = M.playing();
+    snd.classList.toggle('on', on); snd.setAttribute('aria-pressed', on);
+    snd.setAttribute('aria-label', on ? 'Mute the MooBoard song' : 'Play the MooBoard song');
+  });
 
   /* ---------- waitlist ---------- */
   var form = $('#wl-form'), msg = $('#wl-msg');

@@ -14,13 +14,13 @@ def flats():
         return (f'<figure><img src="{face(name)}" style="width:{w*k}px;height:{h*k}px">'
                 f'<figcaption>{label}</figcaption></figure>')
     return f'''<!doctype html><html><head><meta charset="utf-8"><style>{FONTS}
-html,body{{margin:0;background:#EAF6F9}}
+html,body{{margin:0;background:#E9FBF7}}
 body{{padding:56px 60px 40px;font-family:Nunito;color:#0E1A22;width:{2*L*k+60}px}}
-h1{{font-family:Fredoka;font-weight:600;font-size:34px;margin:0 0 6px;letter-spacing:-.01em;color:#0B6E80}}
-p.sub{{margin:0 0 36px;font-weight:700;font-size:16px;color:#0B6E80;opacity:.8}}
+h1{{font-family:Fredoka;font-weight:600;font-size:34px;margin:0 0 6px;letter-spacing:-.01em;color:#0E6B5E}}
+p.sub{{margin:0 0 36px;font-weight:700;font-size:16px;color:#0E6B5E;opacity:.8}}
 .grid{{display:grid;grid-template-columns:{L*k}px {L*k}px;gap:40px 60px;align-items:start}}
 figure{{margin:0}}img{{display:block;border-radius:6px;box-shadow:0 10px 30px rgba(11,110,128,.18)}}
-figcaption{{font-weight:800;font-size:15px;margin-top:10px;letter-spacing:.02em;color:#0B6E80}}
+figcaption{{font-weight:800;font-size:15px;margin-top:10px;letter-spacing:.02em;color:#0E6B5E}}
 .pair{{display:flex;gap:40px}}
 </style></head><body>
 <h1>mooboard mailer</h1><p class="sub">Inside {L:.0f} × {W:.0f} × {H:.0f} mm. All faces upright.</p>
@@ -65,7 +65,7 @@ def mockup(open_lid=False):
     ty = 30 if not open_lid else 110
     return f'''<!doctype html><html><head><meta charset="utf-8"><style>
 html,body{{margin:0;height:100%;overflow:hidden}}
-body{{background:radial-gradient(120% 90% at 50% 38%,#FFFFFF 0%,#EAF6F9 55%,#CFEAF1 100%)}}
+body{{background:radial-gradient(120% 90% at 50% 38%,#FFFFFF 0%,#E9FBF7 55%,#CFEAF1 100%)}}
 .stage{{position:absolute;inset:0;perspective:2600px;perspective-origin:50% 30%}}
 .shadow{{position:absolute;left:{57 if not open_lid else 53}%;top:{55 if not open_lid else 60}%;width:{l*1.25}px;height:{w*1.3}px;transform:translate(-50%,-10%);
  background:radial-gradient(closest-side,rgba(6,65,77,.38),rgba(6,65,77,.14) 55%,rgba(6,65,77,0));filter:blur(18px)}}
@@ -79,7 +79,7 @@ body{{background:radial-gradient(120% 90% at 50% 38%,#FFFFFF 0%,#EAF6F9 55%,#CFE
 .in{{background:#F5E9D6;backface-visibility:hidden}}
 .tray{{background:#E9DCC6;backface-visibility:visible}}
 .card{{position:absolute;background:#FFFFFF;border-radius:6px;box-shadow:0 6px 14px rgba(0,0,0,.25);transform:rotate(-7deg);
- display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font:600 28px Fredoka;color:#0B6E80}}
+ display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font:600 28px Fredoka;color:#0E6B5E}}
 .card img{{width:40%}}
 {FONTS}
 </style></head><body><div class="stage"><div class="shadow"></div><div class="box">{faces}</div></div></body></html>'''

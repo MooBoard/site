@@ -11,6 +11,13 @@ with "moo". Written **MooBoard** in text; the wordmark is lowercase **mooboard**
 
 ## Logo
 
+The mark is a cow in a onesie: a smooth rounded body with sideways ears (pink insides) and cream horns, in the
+frame colour; the face is the product's black LED display, shown as a centred dot grid: the eyes are round clusters of
+lit white dots with one black pupil each (the size of a nostril), the muzzle a rounded cluster of lit pink dots with
+two black nostrils. Pupils carry `class="pupil"` so apps and the site can light them in other colours (loading,
+excitement). Everything sits on the centre line.
+
+
 - `wordmark-*.svg`: "mooboard", Fredoka SemiBold (600), outlined to paths. Colours: deep (on light), white (on dark or
   sky), sky, black.
 - `mark-*.svg`: the cow board. A rounded LED screen with sideways ears, two small cream horns, LED-dot eyes and a pink
@@ -22,10 +29,10 @@ with "moo". Written **MooBoard** in text; the wordmark is lowercase **mooboard**
 
 | Token | Hex | Use |
 |---|---|---|
-| Sky Teal | `#3DC4E0` | The hero colour: logo, highlights, buttons |
-| Deep Teal | `#0B6E80` | Text and icons on light grounds (passes AA on white) |
+| MooBoard Teal | `#77EDD7` | The brand colour (the owner, 2026-09-29: "no blue, keep the bambulab teal as the brand color"): Bambu PETG Translucent Teal 32501. Logo, highlights, buttons (with ink text) |
+| Deep Mint | `#0E6B5E` | Text and icons on light grounds (passes AA on white) |
 | Ink | `#0E1A22` | Text on light, dark grounds, the mark's screen |
-| Mist | `#EAF6F9` | Light ground |
+| Mint White | `#E9FBF7` | Light ground |
 | Cream | `#F5E9D6` | Warm light ground, the horns |
 | Muzzle Pink | `#FFB7C9` | Tiny accents only (the muzzle, a sale tag) |
 

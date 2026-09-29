@@ -9,7 +9,7 @@
 @font-face{font-family:"Fredoka";src:url(data:font/ttf;base64,{{FREDOKA}}) format("truetype");font-weight:300 700;font-display:block}
 @font-face{font-family:"Nunito";src:url(data:font/ttf;base64,{{NUNITO}}) format("truetype");font-weight:200 1000;font-display:block}
 :root{
-  --sky:#3DC4E0;--deep:#0B6E80;--ink:#0E1A22;--mist:#EAF6F9;--cream:#F5E9D6;--pink:#FFB7C9;
+  --sky:#77EDD7;--deep:#0E6B5E;--ink:#0E1A22;--mist:#E9FBF7;--cream:#F5E9D6;--pink:#FFB7C9;
   --card:#FFFFFF;--line:rgba(14,26,34,.10);--soft:rgba(14,26,34,.55);
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -173,7 +173,7 @@ footer .moo{font:600 96px/1 "Fredoka";letter-spacing:-.03em;color:var(--deep)}
   <div class="lock">{{LOCKUP_light}}</div>
   <div class="tag">
     <span class="pill dark">Brand kit</span><span class="pill">1.0</span>
-    <span class="dots" aria-hidden="true"><i style="background:#3DC4E0"></i><i style="background:#0B6E80"></i><i style="background:#0E1A22"></i><i style="background:#F5E9D6"></i><i style="background:#FFB7C9"></i></span>
+    <span class="dots" aria-hidden="true"><i style="background:#77EDD7"></i><i style="background:#0E6B5E"></i><i style="background:#0E1A22"></i><i style="background:#F5E9D6"></i><i style="background:#FFB7C9"></i></span>
   </div>
 </div></header>
 
@@ -204,7 +204,7 @@ footer .moo{font:600 96px/1 "Fredoka";letter-spacing:-.03em;color:var(--deep)}
 <section id="mark" class="marks" style="padding-top:0"><div class="wrap">
   <div class="head"><span class="num">03</span><h2>Mark</h2></div>
   <div class="grid g4">
-    <div><div class="tile" style="background:#fff;box-shadow:0 0 0 1px var(--line) inset">{{MARK_sky}}</div><div class="cap">Sky &middot; #3DC4E0</div></div>
+    <div><div class="tile" style="background:#fff;box-shadow:0 0 0 1px var(--line) inset">{{MARK_sky}}</div><div class="cap">Sky &middot; #77EDD7</div></div>
     <div><div class="tile" style="background:var(--cream)">{{MARK_black}}</div><div class="cap">Black &middot; #17191C</div></div>
     <div><div class="tile" style="background:var(--sky)">{{MARK_white}}</div><div class="cap">White &middot; #F5F3EF</div></div>
     <div><div class="tile" style="background:var(--ink)">{{MARK_orange}}</div><div class="cap">Orange &middot; #FF7A21</div></div>
@@ -279,7 +279,7 @@ footer .moo{font:600 96px/1 "Fredoka";letter-spacing:-.03em;color:var(--deep)}
   <div class="head"><span class="num">08</span><h2>Icons</h2></div>
   <div class="icons">
     <div class="ico"><div class="v"><img src="{{URI_ios}}" width="180" height="180" alt="iOS app icon"></div><div class="nm"><b>App</b><span class="mono">app-icon-1024.png</span></div></div>
-    <div class="ico"><div class="v"><div style="width:180px;height:180px;border-radius:50%;overflow:hidden;background:#3DC4E0"><img src="{{URI_andfg}}" width="180" height="180" alt="Android adaptive icon" style="transform:scale(1.5);transform-origin:center"></div></div><div class="nm"><b>Android</b><span class="mono">foreground-432.png</span></div></div>
+    <div class="ico"><div class="v"><div style="width:180px;height:180px;border-radius:50%;overflow:hidden;background:#77EDD7"><img src="{{URI_andfg}}" width="180" height="180" alt="Android adaptive icon" style="transform:scale(1.5);transform-origin:center"></div></div><div class="nm"><b>Android</b><span class="mono">foreground-432.png</span></div></div>
     <div class="ico"><div class="v"><img src="{{URI_avatar}}" width="180" height="180" alt="Social avatar" style="border-radius:50%"></div><div class="nm"><b>Avatar</b><span class="mono">avatar-800.png</span></div></div>
   </div>
   <div class="favs">
@@ -343,7 +343,7 @@ footer .moo{font:600 96px/1 "Fredoka";letter-spacing:-.03em;color:var(--deep)}
     x=text(hh,x,2,warm,2,1);
     if(d.getMilliseconds()<600){put(x,5,warm);put(x+1,5,warm);put(x,6,warm);put(x+1,6,warm);put(x,11,warm);put(x+1,11,warm);put(x,12,warm);put(x+1,12,warm);}
     x+=4;text(mm,x,2,warm,2,1);
-    var ds=DAYS[d.getDay()]+' '+d.getDate();text(ds,124-width(ds),2,'#3DC4E0');
+    var ds=DAYS[d.getDay()]+' '+d.getDate();text(ds,124-width(ds),2,'#77EDD7');
     var tp='24°';sun(124-width(tp)-10,10);text(tp,124-width(tp),10,'#FFF1DC');
     // lyric sweep, word by word
     var cyc=(t/1000+2.4)%7,n=Math.min(words.length,Math.floor(cyc/0.7)+ (cyc>0.2?1:0));

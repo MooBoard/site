@@ -18,11 +18,11 @@ for k,(m,w) in LOCK.items():
 # clear space diagram
 M=56
 cs=(f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{-M-4} {-M-4} {LW+2*M+8:.1f} {112+2*M+8}">'
-    '<defs><pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="#EAF6F9"/><rect width="3" height="8" fill="#3DC4E0" opacity=".35"/></pattern></defs>'
+    '<defs><pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="#E9FBF7"/><rect width="3" height="8" fill="#77EDD7" opacity=".35"/></pattern></defs>'
     f'<rect x="{-M}" y="{-M}" width="{LW+2*M:.1f}" height="{112+2*M}" rx="14" fill="url(#hatch)"/>'
     f'<rect x="0" y="0" width="{LW:.1f}" height="112" fill="#fff"/>'
     + lockbody('sky','deep') +
-    f'<rect x="{-M}" y="{-M}" width="{LW+2*M:.1f}" height="{112+2*M}" rx="14" fill="none" stroke="#0B6E80" stroke-width="2" stroke-dasharray="8 6"/>'
+    f'<rect x="{-M}" y="{-M}" width="{LW+2*M:.1f}" height="{112+2*M}" rx="14" fill="none" stroke="#0E6B5E" stroke-width="2" stroke-dasharray="8 6"/>'
     f'<rect x="0" y="0" width="{LW:.1f}" height="112" fill="none" stroke="#FFB7C9" stroke-width="2"/>'
     # half-mark units: small marks in the margin
     f'<g opacity=".9"><svg x="{-M+6}" y="{-M+6}" width="44" height="44" viewBox="0 0 136 112">{MARK["sky"]}</svg>'
@@ -36,11 +36,11 @@ def L(h):
 def cr(a,b):
     a,b=L(a),L(b); return (max(a,b)+0.05)/(min(a,b)+0.05)
 def grade(r): return 'AAA' if r>=7 else 'AA' if r>=4.5 else 'AA large' if r>=3 else 'Logo only'
-SW=[('Sky Teal','#3DC4E0','Hero, logo, buttons',[('#0E1A22','#3DC4E0'),('#FFFFFF','#3DC4E0')],'#0E1A22'),
-    ('Deep Teal','#0B6E80','Text, icons on light',[('#0B6E80','#FFFFFF'),('#0B6E80','#EAF6F9')],'#FFFFFF'),
-    ('Ink','#0E1A22','Text, dark grounds',[('#0E1A22','#EAF6F9'),('#FFFFFF','#0E1A22')],'#FFFFFF'),
-    ('Mist','#EAF6F9','Light ground',[('#0E1A22','#EAF6F9'),('#0B6E80','#EAF6F9')],'#0E1A22'),
-    ('Cream','#F5E9D6','Warm ground, horns',[('#0E1A22','#F5E9D6'),('#0B6E80','#F5E9D6')],'#0E1A22'),
+SW=[('Sky Teal','#77EDD7','Hero, logo, buttons',[('#0E1A22','#77EDD7'),('#FFFFFF','#77EDD7')],'#0E1A22'),
+    ('Deep Teal','#0E6B5E','Text, icons on light',[('#0E6B5E','#FFFFFF'),('#0E6B5E','#E9FBF7')],'#FFFFFF'),
+    ('Ink','#0E1A22','Text, dark grounds',[('#0E1A22','#E9FBF7'),('#FFFFFF','#0E1A22')],'#FFFFFF'),
+    ('Mist','#E9FBF7','Light ground',[('#0E1A22','#E9FBF7'),('#0E6B5E','#E9FBF7')],'#0E1A22'),
+    ('Cream','#F5E9D6','Warm ground, horns',[('#0E1A22','#F5E9D6'),('#0E6B5E','#F5E9D6')],'#0E1A22'),
     ('Muzzle Pink','#FFB7C9','Tiny accents only',[('#0E1A22','#FFB7C9'),('#FFFFFF','#FFB7C9')],'#0E1A22')]
 sw=[]
 for name,hx,use,pairs,fg in SW:
@@ -49,9 +49,9 @@ for name,hx,use,pairs,fg in SW:
     for f,g in pairs:
         r=cr(f,g); gr=grade(r)
         low=' class="low"' if r<3 else ''
-        if r<3: gr='Logo only' if g=='#3DC4E0' else 'Avoid'
+        if r<3: gr='Logo only' if g=='#77EDD7' else 'Avoid'
         chips+=f'<span{low}><i style="color:{f};background:{g};box-shadow:0 0 0 1px rgba(14,26,34,.08)">Aa</i>{r:.1f} {gr}</span>'
-    border=';box-shadow:inset 0 -1px 0 rgba(14,26,34,.08)' if hx in('#EAF6F9','#F5E9D6') else ''
+    border=';box-shadow:inset 0 -1px 0 rgba(14,26,34,.08)' if hx in('#E9FBF7','#F5E9D6') else ''
     sw.append(f'<div class="sw"><div class="chip" style="background:{hx}{border}"><span style="color:{fg}">{name}</span></div>'
               f'<div class="meta"><div class="row"><span class="hex">{hx}</span><span class="mono">RGB {rgb}</span></div>'
               f'<div class="use">{use}</div><div class="cr">{chips}</div></div></div>')
@@ -59,10 +59,10 @@ for name,hx,use,pairs,fg in SW:
 TICK='<svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5" fill="none" stroke="#0E1A22" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'
 CROSS='<svg viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="#0E1A22" stroke-width="2.4" stroke-linecap="round"/></svg>'
 def rule(ok,label,bg,vis):
-    ic=f'<span class="ic" style="background:{"#3DC4E0" if ok else "#FFB7C9"}">{TICK if ok else CROSS}</span>'
+    ic=f'<span class="ic" style="background:{"#77EDD7" if ok else "#FFB7C9"}">{TICK if ok else CROSS}</span>'
     return f'<div class="it"><div class="vis" style="background:{bg}">{vis}</div><div class="lab">{ic}{label}</div></div>'
-R=[rule(1,'Room to breathe','#EAF6F9',lockup('sky','deep','style="width:62%"')),
-   rule(1,'White on sky','#3DC4E0',lockup('white','white','style="width:62%"')),
+R=[rule(1,'Room to breathe','#E9FBF7',lockup('sky','deep','style="width:62%"')),
+   rule(1,'White on sky','#77EDD7',lockup('white','white','style="width:62%"')),
    rule(1,'Mark when small','#0E1A22',f'<svg viewBox="0 0 136 112" style="width:30%">{MARK["sky"]}</svg>'),
    rule(1,'Frame colours','#F5E9D6','<div style="display:flex;gap:6%;width:84%">'+''.join(f'<svg viewBox="0 0 136 112" style="width:25%">{MARK[c]}</svg>' for c in ['sky','black','white','orange'])+'</div>'),
    rule(0,'Stretch','#fff',lockup('sky','deep','style="width:92%;height:22px" preserveAspectRatio="none"')),

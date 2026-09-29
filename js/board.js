@@ -12,7 +12,7 @@
 
   var C = {
     marigold: [255, 184, 28], pink: [255, 46, 136], cream: [245, 233, 214],
-    sky: [61, 196, 224], warm: [255, 238, 214], white: [255, 255, 255]
+    sky: [119, 237, 215], warm: [255, 238, 214], white: [255, 255, 255]
   };
 
   /* ---------- helpers ---------- */
@@ -187,6 +187,40 @@
             return mul(C.cream, .22);
           }, font);
         });
+      }
+    };
+  };
+
+  // the site's own theme song (js/music.js): lyrics light word by word in time with the music
+  function songLine(ctx, words, y, step, pulse) {
+    var font = '900 13px Nunito', line = words.map(function (w) { return w[0]; }).join(' '), x0 = cx(line, font, 64), xe = x0 + measure(line, font).w;
+    var spans = [], acc = '';
+    words.forEach(function (w, k) {
+      var st = x0 + (k ? measure(acc + ' ', font).w : 0); acc += (k ? ' ' : '') + w[0];
+      var ws = w[1], we = k + 1 < words.length ? words[k + 1][1] : ws + 4;
+      spans.push([st, x0 + measure(acc, font).w, ws, Math.min(we, ws + 4)]);
+    });
+    text(ctx, line, x0, y, function (X) {
+      for (var q = 0; q < spans.length; q++) {
+        var sp = spans[q];
+        if (X >= sp[0] - 1 && X <= sp[1] + 1) {
+          var f = (step - sp[2]) / Math.max(1, sp[3] - sp[2]);
+          if (f >= 1 || (f > 0 && X <= sp[0] + (sp[1] - sp[0]) * f)) return mul(sweep(X, x0, xe), pulse);
+          return mul(C.cream, .22);
+        }
+      }
+      return mul(C.cream, .22);
+    }, font);
+  }
+  S.song = function () {
+    return {
+      label: 'Song', dur: 1e9,
+      draw: function (ctx, t) {
+        var M = window.MooMusic, p = M && M.pos();
+        if (!p) return;
+        var L = M.song, pulse = .8 + .2 * (1 - (p.step % 2) / 2);
+        songLine(ctx, L[p.line].words, 13, p.step, pulse);
+        songLine(ctx, L[(p.line + 1) % L.length].words, 28, -1, 1);
       }
     };
   };
@@ -383,7 +417,7 @@
       draw: function (ctx, t, st) {
         var d = new Date(), c = clockParts(d), f = Math.floor(st / 3) % 3, str = c.h + ':' + c.m;
         if (f === 0) {
-          ctext(ctx, str, 64, 27, function (X, Y) { return mix(C.sky, [140, 240, 255], Y / 32); }, '600 30px Fredoka');
+          ctext(ctx, str, 64, 27, function (X, Y) { return mix(C.sky, [210, 255, 244], Y / 32); }, '600 30px Fredoka');
         } else if (f === 1) {
           ctext(ctx, str, 64, 25, [255, 30, 20, .7], '800 26px Nunito');
         } else {
@@ -483,7 +517,7 @@
     this.scenes = {};
     this.names.concat(['moo']).forEach(function (n) { self.scenes[n] = S[n](self); });
     this.idx = 0; this.cur = this.names[0]; this.start = 0; this.next = null; this.tStart = 0;
-    this.auto = opts.auto !== false; this.visible = true; this.frame = 0; this.glow = [61, 196, 224];
+    this.auto = opts.auto !== false; this.visible = true; this.frame = 0; this.glow = [119, 237, 215];
     this.last = 0; this.s = 0;
     this.resize();
     if (window.ResizeObserver) new ResizeObserver(function () { self.resize(); }).observe(el);
@@ -504,6 +538,17 @@
     if (this.scenes[name].enter) this.scenes[name].enter();
     this.el.dispatchEvent(new CustomEvent('scene', { detail: name }));
   };
+  // keep one scene on the board (the song) until released
+  Board.prototype.hold = function (name) {
+    if (!this.scenes[name]) this.scenes[name] = S[name](this);
+    this.held = name;
+    if (this.next) { this.cur = this.next; this.start = this.tStart; this.next = null; }
+    this.go(name);
+  };
+  Board.prototype.release = function () {
+    var h = this.held; this.held = null;
+    if (h && (this.cur === h || this.next === h)) this.go(this.names[0]);
+  };
   Board.prototype.step = function () {
     var i = this.names.indexOf(this.cur);
     this.go(this.names[(i + 1) % this.names.length]);
@@ -520,7 +565,7 @@
     if (!this.start) { this.start = t; st = 0; }
     var TR = REDUCED ? 0.01 : 0.7;
     var mooBack = this.cur === 'moo' && this.back;
-    if (!this.next && ((this.auto && this.names.length > 1) || mooBack) && st > sc.dur * (REDUCED ? 1.6 : 1)) {
+    if (!this.next && ((this.auto && !this.held && this.names.length > 1) || mooBack) && st > sc.dur * (REDUCED ? 1.6 : 1)) {
       var nm = mooBack ? this.back : this.names[(this.names.indexOf(this.cur) + 1) % this.names.length];
       this.back = null;
       if (nm !== this.cur) this.go(nm, t);
