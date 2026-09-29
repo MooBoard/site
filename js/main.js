@@ -104,8 +104,10 @@ var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
   /* ---------- frame colours ---------- */
   var FRAMES = ['black', 'white', 'orange', 'teal'];
   var CBG = { black: '#E9FBF7', white: '#E3F2EE', orange: '#FFE7D6', teal: '#D5F8EF' };
+  var MARK_FRAME = { black: '#17191C', white: '#FFFFFF', orange: '#FF7A21', teal: '#77EDD7' };
   function setHeroFrame(f) {
     $('#hero-bezel').dataset.frame = f;
+    $$('.mark').forEach(function (m) { m.style.setProperty('--mark-frame', MARK_FRAME[f]); m.dataset.frame = f; });
     $$('.swatches .sw').forEach(function (s) { s.classList.toggle('on', s.dataset.frame === f); s.setAttribute('aria-checked', s.dataset.frame === f); });
   }
   $$('.swatches .sw').forEach(function (s) {
@@ -538,12 +540,12 @@ var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
         var p = self.progress;
         if (colorSeq) colorSeq.set(p);
         else gsap.set('#colors .swing', { rotateY: -16 + p * 32, rotateX: 6 - p * 6 });
-        setColor(rangeIndex(colorSeq, 'colors', FRAMES, p), true);
+        setColor(rangeIndex(colorSeq, 'colors', FRAMES, p));
       }
     });
     setColor(0);
     $$('.cp').forEach(function (c, i) {
-      c.addEventListener('click', function () { scrollTo(colorST.start + (colorST.end - colorST.start) * rangeProgress(colorSeq, 'colors', FRAMES[i], i, 4)); });
+      c.addEventListener('click', function () { setHeroFrame(FRAMES[i]); scrollTo(colorST.start + (colorST.end - colorST.start) * rangeProgress(colorSeq, 'colors', FRAMES[i], i, 4)); });
     });
 
     // room

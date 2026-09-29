@@ -35,8 +35,13 @@ def build(uid):
         body = body[:-4] + '<g class="eyes">' + ''.join(eyes) + '<g class="pupils">' + ''.join(pupils) + '</g></g></g>'
     else:
         body += '<g class="eyes">' + ''.join(eyes) + '<g class="pupils">' + ''.join(pupils) + '</g></g>'
+    # the frame-coloured parts follow the chosen frame colour through --mark-frame
+    frame = re.search(r'fill="(#[0-9A-Fa-f]{6})"', ''.join(ear_l)).group(1)
+    ears_l = ''.join(ear_l).replace('fill="%s"' % frame, 'class="mf" fill="%s"' % frame)
+    ears_r = ''.join(ear_r).replace('fill="%s"' % frame, 'class="mf" fill="%s"' % frame)
+    body = body.replace('fill="%s"' % frame, 'class="mf" fill="%s"' % frame)
     return ('<svg class="mark" viewBox="%s" aria-hidden="true"><g class="ear ear-l">%s</g><g class="ear ear-r">%s</g>%s</svg>'
-            % (view, ''.join(ear_l), ''.join(ear_r), body))
+            % (view, ears_l, ears_r, body))
 
 path = os.path.join(root, 'index.html')
 html = open(path).read()

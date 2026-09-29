@@ -466,3 +466,7 @@ h1, h2 { font-family: var(--display); font-weight: 600; letter-spacing: -.01em; 
 .colors.has-frames .big { position: absolute; left: 0; right: 0; top: max(84px, 9vh); }
 .colors.has-frames .color-pick { position: absolute; left: var(--gut); right: var(--gut); bottom: max(40px, 7vh); }
 @media (max-width: 700px) { .colors.has-frames .color-pick { bottom: 90px; } }
+
+/* the nav and footer marks wear the chosen frame colour */
+.mark .mf { fill: var(--mark-frame, #77EDD7); transition: fill .5s var(--ease); }
+.mark[data-frame="black"] { filter: drop-shadow(0 0 1px rgba(255, 255, 255, .45)); }
