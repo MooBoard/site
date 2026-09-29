@@ -350,9 +350,16 @@
       label: 'Weather', dur: 7, variant: board && board.opts.weather,
       enter: function () { n++; },
       draw: function (ctx, t, st, dt) {
-        var snow = sc.variant ? sc.variant === 'snow' : n % 2 === 0;
+        var kind = sc.variant || (n % 2 === 0 ? 'snow' : 'rain'), snow = kind === 'snow';
+        if (kind === 'clear') {
+          var d = new Date(); drawSky(ctx, t, d.getHours() + d.getMinutes() / 60, .8, W);
+          rect(ctx, 76, 9, 52, 23, [0, 0, 0], .6);
+          ctext(ctx, sc.temp || '72°', 101, 25, C.warm, '900 19px Nunito');
+          ctext(ctx, sc.label || 'CLEAR', 101, 31, mul(C.sky, 1));
+          return;
+        }
         for (var y = 0; y < H; y++) rect(ctx, 0, y, W, 1, snow ? mix([30, 40, 62], [14, 18, 30], y / H) : mix([22, 32, 48], [8, 12, 22], y / H));
-        var bolt = !snow && (st % 4.3) > 3.9 && (st % 4.3) < 4.02;
+        var bolt = (kind === 'storm' || (kind === 'rain' && !sc.label)) && (st % 4.3) > 3.9 && (st % 4.3) < 4.02;
         if (bolt) rect(ctx, 0, 0, W, H, [200, 210, 255], .5);
         // clouds
         for (var k = 0; k < 4; k++) {
@@ -367,7 +374,7 @@
             if (f[1] > H) { f[1] = 4; f[0] = Math.random() * W; }
             px(ctx, f[0], f[1], [240, 246, 255], .9);
           });
-        } else {
+        } else if (kind !== 'cloud') {
           drops.forEach(function (d) {
             d[1] += d[2] * step * 2; d[0] -= d[2] * step * .6;
             if (d[1] > H) { d[1] = 5; d[0] = Math.random() * (W + 20); }
@@ -375,11 +382,113 @@
           });
         }
         rect(ctx, 76, 9, 52, 23, [0, 0, 0], .72);
-        ctext(ctx, snow ? '28°' : '54°', 101, 25, C.warm, '900 19px Nunito');
-        ctext(ctx, snow ? 'SNOW' : 'RAIN', 101, 32 - 1, snow ? mul(C.sky, 1) : [120, 190, 255]);
+        ctext(ctx, sc.temp || (snow ? '28°' : '54°'), 101, 25, C.warm, '900 19px Nunito');
+        ctext(ctx, sc.label || (snow ? 'SNOW' : 'RAIN'), 101, 32 - 1, snow ? mul(C.sky, 1) : [120, 190, 255]);
       }
     };
     return sc;
+  };
+
+  /* ---------- live weather: Open-Meteo, no key, location guessed from the time zone (no prompt) ---------- */
+  var TZ_CITY = {
+    'America/New_York': [40.71, -74.01, 'NYC'], 'America/Detroit': [42.33, -83.05, 'DETROIT'], 'America/Toronto': [43.65, -79.38, 'TORONTO'],
+    'America/Chicago': [41.88, -87.63, 'CHICAGO'], 'America/Denver': [39.74, -104.99, 'DENVER'], 'America/Phoenix': [33.45, -112.07, 'PHOENIX'],
+    'America/Los_Angeles': [34.05, -118.24, 'L.A.'], 'America/Vancouver': [49.28, -123.12, 'VANCOUVR'], 'America/Anchorage': [61.22, -149.9, 'ANCHORGE'],
+    'Pacific/Honolulu': [21.31, -157.86, 'HONOLULU'], 'America/Mexico_City': [19.43, -99.13, 'MEXICO'], 'America/Sao_Paulo': [-23.55, -46.63, 'SAO PAULO'],
+    'America/Bogota': [4.71, -74.07, 'BOGOTA'], 'America/Argentina/Buenos_Aires': [-34.6, -58.38, 'B. AIRES'], 'Europe/London': [51.51, -0.13, 'LONDON'],
+    'Europe/Dublin': [53.35, -6.26, 'DUBLIN'], 'Europe/Paris': [48.86, 2.35, 'PARIS'], 'Europe/Berlin': [52.52, 13.4, 'BERLIN'], 'Europe/Madrid': [40.42, -3.7, 'MADRID'],
+    'Europe/Rome': [41.9, 12.5, 'ROME'], 'Europe/Amsterdam': [52.37, 4.9, 'AMSTRDAM'], 'Europe/Stockholm': [59.33, 18.07, 'STOCKHLM'], 'Europe/Zurich': [47.38, 8.54, 'ZURICH'],
+    'Europe/Istanbul': [41.01, 28.98, 'ISTANBUL'], 'Europe/Moscow': [55.76, 37.62, 'MOSCOW'], 'Africa/Cairo': [30.04, 31.24, 'CAIRO'], 'Africa/Lagos': [6.52, 3.38, 'LAGOS'],
+    'Africa/Nairobi': [-1.29, 36.82, 'NAIROBI'], 'Africa/Johannesburg': [-26.2, 28.05, 'JOBURG'], 'Asia/Dubai': [25.2, 55.27, 'DUBAI'],
+    'Asia/Kolkata': [28.61, 77.21, 'DELHI'], 'Asia/Calcutta': [28.61, 77.21, 'DELHI'], 'Asia/Karachi': [24.86, 67.0, 'KARACHI'], 'Asia/Dhaka': [23.81, 90.41, 'DHAKA'],
+    'Asia/Bangkok': [13.76, 100.5, 'BANGKOK'], 'Asia/Jakarta': [-6.2, 106.85, 'JAKARTA'], 'Asia/Singapore': [1.35, 103.82, 'SINGAPRE'], 'Asia/Manila': [14.6, 120.98, 'MANILA'],
+    'Asia/Hong_Kong': [22.32, 114.17, 'HONGKONG'], 'Asia/Shanghai': [31.23, 121.47, 'SHANGHAI'], 'Asia/Seoul': [37.57, 126.98, 'SEOUL'], 'Asia/Tokyo': [35.68, 139.69, 'TOKYO'],
+    'Australia/Sydney': [-33.87, 151.21, 'SYDNEY'], 'Australia/Melbourne': [-37.81, 144.96, 'MELBRNE'], 'Australia/Perth': [-31.95, 115.86, 'PERTH'],
+    'Pacific/Auckland': [-36.85, 174.76, 'AUCKLAND'], 'America/Indianapolis': [39.77, -86.16, 'INDY'], 'America/Indiana/Indianapolis': [39.77, -86.16, 'INDY'],
+    'America/Kentucky/Louisville': [38.25, -85.76, 'LOUISVLE'], 'America/Halifax': [44.65, -63.58, 'HALIFAX'], 'America/Edmonton': [53.55, -113.49, 'EDMONTON'],
+    'America/Winnipeg': [49.9, -97.14, 'WINNIPEG'], 'America/Boise': [43.62, -116.2, 'BOISE'], 'America/Santiago': [-33.45, -70.67, 'SANTIAGO'],
+    'America/Lima': [-12.05, -77.04, 'LIMA'], 'Europe/Lisbon': [38.72, -9.14, 'LISBON'], 'Europe/Warsaw': [52.23, 21.01, 'WARSAW'], 'Europe/Athens': [37.98, 23.73, 'ATHENS'],
+    'Europe/Helsinki': [60.17, 24.94, 'HELSINKI'], 'Europe/Oslo': [59.91, 10.75, 'OSLO'], 'Europe/Copenhagen': [55.68, 12.57, 'CPH'], 'Europe/Brussels': [50.85, 4.35, 'BRUSSELS'],
+    'Europe/Vienna': [48.21, 16.37, 'VIENNA'], 'Europe/Prague': [50.08, 14.44, 'PRAGUE'], 'Asia/Taipei': [25.03, 121.57, 'TAIPEI'], 'Asia/Kathmandu': [27.72, 85.32, 'KATHMNDU'],
+    'Asia/Riyadh': [24.71, 46.68, 'RIYADH'], 'Asia/Tehran': [35.69, 51.39, 'TEHRAN'], 'Australia/Brisbane': [-27.47, 153.03, 'BRISBANE']
+  };
+  var TZ = ''; try { TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) { /* none */ }
+  var SOUTH = /^(Australia|Pacific\/Auckland|America\/(Sao_Paulo|Argentina|Santiago)|Africa\/Johannesburg)/.test(TZ);
+  var FAHR = /^(en-US|en-LR|my)/.test(navigator.language || '') || /^America\/(New_York|Chicago|Denver|Los_Angeles|Phoenix|Anchorage|Detroit)|^Pacific\/Honolulu/.test(TZ);
+  var WX = null, wxAsked = false;
+  function wxKind(code) {
+    if (code >= 95) return 'storm'; if (code >= 71 && code <= 77 || code === 85 || code === 86) return 'snow';
+    if (code >= 51) return 'rain'; if (code >= 2) return 'cloud'; return 'clear';
+  }
+  function askWeather() {
+    if (wxAsked) return; wxAsked = true;
+    var c = TZ_CITY[TZ]; if (!c || !window.fetch) return;
+    fetch('https://api.open-meteo.com/v1/forecast?latitude=' + c[0] + '&longitude=' + c[1] + '&current=temperature_2m,weather_code,is_day' + (FAHR ? '&temperature_unit=fahrenheit' : ''))
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) { if (j && j.current) WX = { temp: Math.round(j.current.temperature_2m), kind: wxKind(j.current.weather_code), city: c[2] }; })
+      .catch(function () { /* stand-in sky stays */ });
+  }
+  S.wx = function (board) {
+    var inner = S.weather(board);
+    return {
+      label: 'Weather', dur: 8,
+      draw: function (ctx, t, st, dt) {
+        askWeather();
+        if (!WX) { inner.variant = 'rain'; inner.label = null; return inner.draw(ctx, t, st, dt); }
+        inner.variant = WX.kind; inner.label = WX.city; inner.temp = WX.temp + '°';
+        inner.draw(ctx, t, st, dt);
+      }
+    };
+  };
+
+  /* ---------- seasons: today's date picks the art ---------- */
+  function seasonNow(d) {
+    var m = d.getMonth(), day = d.getDate(), md = m * 100 + day;
+    if (m === 9 && day >= 24) return 'halloween';
+    if ((m === 11 && day >= 18) || (m === 0 && day <= 1)) return 'holiday';
+    if (m === 1 && day >= 12 && day <= 14) return 'hearts';
+    var s = md >= 220 && md < 521 ? 'spring' : md >= 521 && md < 822 ? 'summer' : md >= 822 && md < 1121 ? 'autumn' : 'winter';
+    if (SOUTH) s = { spring: 'autumn', summer: 'winter', autumn: 'spring', winter: 'summer' }[s];
+    return s;
+  }
+  S.seasons = function () {
+    var parts = [], r = rnd(21);
+    return {
+      label: 'Seasons', dur: 8,
+      draw: function (ctx, t, st, dt) {
+        var d = new Date(), k = seasonNow(d), step = Math.min(dt || .016, .05), i;
+        var P = {
+          spring: { sky: [[40, 90, 150], [120, 190, 230]], ground: [60, 150, 70], cols: [[255, 170, 200], [255, 255, 255], [255, 210, 90]], fall: .25, word: 'SPRING' },
+          summer: { sky: [[30, 110, 210], [140, 210, 250]], ground: [230, 200, 120], cols: [[255, 255, 255]], fall: 0, word: 'SUMMER' },
+          autumn: { sky: [[60, 40, 70], [240, 150, 90]], ground: [110, 60, 30], cols: [[255, 120, 30], [230, 60, 40], [255, 190, 60]], fall: .5, word: 'AUTUMN' },
+          winter: { sky: [[14, 24, 60], [60, 90, 150]], ground: [230, 240, 255], cols: [[255, 255, 255]], fall: .6, word: 'WINTER' },
+          halloween: { sky: [[20, 10, 40], [70, 30, 80]], ground: [40, 30, 50], cols: [[255, 140, 0]], fall: 0, word: 'BOO' },
+          holiday: { sky: [[10, 20, 50], [40, 60, 110]], ground: [235, 245, 255], cols: [[255, 255, 255]], fall: .6, word: 'HOLIDAYS' },
+          hearts: { sky: [[80, 10, 40], [200, 60, 110]], ground: [120, 20, 60], cols: [[255, 90, 140], [255, 180, 200]], fall: .4, word: 'LOVE' }
+        }[k];
+        for (var y = 0; y < H; y++) rect(ctx, 0, y, W, 1, mul(mix(P.sky[0], P.sky[1], y / H), .75));
+        if (k === 'summer') { disc(ctx, 20, 10, 7, [255, 200, 60], .25); disc(ctx, 20, 10, 4.5, [255, 220, 90]); for (i = 0; i < 128; i++) rect(ctx, i, 27 + Math.round(Math.sin(i * .25 + t * 3)), 1, 6, [40, 140, 210]); }
+        else if (k === 'halloween') { disc(ctx, 22, 20, 7, [255, 130, 0]); rect(ctx, 21, 11, 2, 3, [60, 140, 40]); px(ctx, 19, 18, [0, 0, 0]); px(ctx, 25, 18, [0, 0, 0]); rect(ctx, 19, 22, 7, 1, [0, 0, 0]); disc(ctx, 108, 8, 4, [240, 240, 220]); }
+        else if (k === 'holiday') { for (i = 0; i < 9; i++) rect(ctx, 20 - i, 6 + i * 2, 1 + i * 2, 2, [40, 150, 70]); rect(ctx, 19, 24, 3, 4, [120, 70, 30]); px(ctx, 20, 5, [255, 220, 60]); for (i = 0; i < 6; i++) px(ctx, 14 + (i * 7) % 13, 10 + i * 2, [[255, 60, 60], [255, 220, 60], [80, 180, 255]][i % 3], .6 + .4 * Math.sin(t * 5 + i)); }
+        else { var tr = k === 'autumn' ? [230, 110, 30] : k === 'spring' ? [255, 170, 210] : k === 'winter' ? [220, 235, 255] : [255, 90, 140]; rect(ctx, 19, 16, 3, 12, [90, 55, 30]); disc(ctx, 20, 12, 8, tr, .9); disc(ctx, 15, 15, 5, tr, .9); disc(ctx, 25, 15, 5, tr, .9); }
+        rect(ctx, 0, 28, W, 4, P.ground);
+        if (P.fall && Math.random() < P.fall) parts.push([r() * W, -1, .5 + r(), r() * 6, P.cols[Math.floor(r() * P.cols.length)]]);
+        parts = parts.filter(function (q) { q[1] += q[2] * step * 12; q[0] += Math.sin(t * 2 + q[3]) * .15; px(ctx, q[0], q[1], q[4]); return q[1] < 28; });
+        rect(ctx, 44, 5, 80, 20, [0, 0, 0], .55);
+        ctext(ctx, P.word, 84, 15, C.warm, '900 13px Nunito');
+        ctext(ctx, MONS[d.getMonth()] + ' ' + d.getDate(), 84, 23, mul(C.cream, .6));
+      }
+    };
+  };
+
+  S.soon = function () {
+    return {
+      label: 'More', dur: 8,
+      draw: function (ctx, t) {
+        for (var i = 0; i < 3; i++) { var on = Math.floor(t * 3) % 3 === i; disc(ctx, 52 + i * 12, 12, 3, on ? C.sky : mul(C.sky, .25)); }
+        ctext(ctx, 'MORE SOON', 64, 28, C.warm);
+      }
+    };
   };
 
   S.tv = function () {

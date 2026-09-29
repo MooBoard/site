@@ -439,3 +439,24 @@ h1, h2 { font-family: var(--display); font-weight: 600; letter-spacing: -.01em; 
   .colors .pin { padding-bottom: 84px; }
   .foot { padding-bottom: 100px; }
 }
+
+/* ---------- apps strip: a slider of live boards ---------- */
+.apps { background: var(--ink); padding: clamp(80px, 11vw, 140px) 0 clamp(70px, 9vw, 120px); overflow: hidden; }
+.apps-h { font-size: clamp(40px, 7vw, 96px); text-align: center; padding: 0 var(--gut); margin-bottom: clamp(36px, 5vw, 60px); }
+.apps-h em { font-style: normal; color: var(--accent-lite); }
+.app-row {
+  list-style: none; margin: 0; display: flex; gap: clamp(14px, 2vw, 24px); overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth;
+  padding: 10px max(var(--gut), calc((100vw - 1240px) / 2)) 26px; scrollbar-width: none; overscroll-behavior-x: contain;
+}
+.app-row::-webkit-scrollbar { display: none; }
+.app-row li { flex: none; width: clamp(270px, 34vw, 440px); scroll-snap-align: center; display: flex; flex-direction: column; gap: 14px; }
+.app-row .bezel { transition: transform .45s var(--ease); }
+.app-row li:hover .bezel { transform: translateY(-6px); }
+.app-name { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-weight: 600; font-size: 19px; color: rgba(255, 255, 255, .9); }
+.app-name svg { width: 30px; height: 30px; flex: none; }
+.app-row .more .app-name { color: rgba(255, 255, 255, .5); }
+.app-nav { display: flex; gap: 10px; justify-content: center; margin-top: 6px; }
+.an { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, .07); box-shadow: 0 0 0 1px rgba(255, 255, 255, .1) inset; transition: background .3s, transform .3s var(--ease); }
+.an:hover { background: var(--accent-solid); color: var(--accent-ink); transform: scale(1.08); }
+.an svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+@media (max-width: 700px) { .app-row li { width: 78vw; } .app-nav { display: none; } }

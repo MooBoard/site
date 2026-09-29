@@ -60,6 +60,47 @@ var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
     t.addEventListener('click', function () { b.moo(); });
   });
 
+  /* ---------- apps strip: rounded icons with an LED dot screen, like the cow ---------- */
+  var APP_ART = {
+    clock:    ['..####..', '.#....#.', '#..#...#', '#..#...#', '#..###.#', '#......#', '.#....#.', '..####..'],
+    weather:  ['........', '..###...', '.#####..', '########', '########', '.#.#.#..', '#.#.#...', '........'],
+    music:    ['....##..', '....###.', '....#.##', '....#...', '....#...', '.####...', '#####...', '.###....'],
+    calendar: ['.#....#.', '########', '########', '#......#', '#.#.#.##', '#......#', '#.#.#..#', '########'],
+    lights:   ['..####..', '.######.', '########', '########', '.######.', '..####..', '..#..#..', '..####..'],
+    prayer:   ['...#....', '...##...', '..###...', '..####..', '...##...', '#......#', '.######.', '..####..'],
+    sports:   ['..####..', '.#.##.#.', '#..##..#', '########', '########', '#..##..#', '.#.##.#.', '..####..'],
+    tv:       ['.#....#.', '..#..#..', '########', '#......#', '#......#', '#......#', '########', '.##..##.'],
+    seasons:  ['......##', '....####', '..######', '.######.', '.#####..', '.####...', '.#......', '#.......'],
+    more:     ['........', '........', '........', '##.##.##', '##.##.##', '........', '........', '........']
+  };
+  var APP_BG = { orange: ['#FF7A21', '#ff9f5c'], white: ['#F5F3EF', '#ffffff'], black: ['#17191C', '#33373d'], teal: ['#77EDD7', '#b9fae9'], ghost: ['rgba(255,255,255,.06)', 'rgba(255,255,255,.12)'] };
+  function appIcon(li, n) {
+    var art = APP_ART[li.dataset.app] || APP_ART.more, bg = APP_BG[li.dataset.bg], c = li.dataset.c, id = 'ag' + n, dots = '';
+    art.forEach(function (row, y) {
+      for (var x = 0; x < 8; x++) {
+        var on = row[x] === '#';
+        dots += '<circle cx="' + (30 + x * 9.4) + '" cy="' + (30 + y * 9.4) + '" r="' + (on ? 3.6 : 2.4) + '" fill="' + (on ? c : '#1F2E38') + '"/>';
+      }
+    });
+    var ghost = li.dataset.bg === 'ghost';
+    return '<svg viewBox="0 0 126 126" aria-hidden="true"><defs><linearGradient id="' + id + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + bg[1] + '"/><stop offset=".5" stop-color="' + bg[0] + '"/></linearGradient></defs>' +
+      '<rect width="126" height="126" rx="30" fill="url(#' + id + ')"' + (ghost ? ' stroke="rgba(255,255,255,.3)" stroke-dasharray="8 7" stroke-width="3"' : '') + '/>' +
+      (ghost ? '' : '<rect x="16" y="16" width="94" height="94" rx="20" fill="#0E1A22"/>') + dots + '</svg>';
+  }
+  var FRAME_OF = { orange: 'orange', white: 'white', black: 'black', teal: 'teal', ghost: 'black' };
+  $$('#app-row li').forEach(function (li, n) {
+    var name = li.textContent.trim(); li.textContent = '';
+    var bz = document.createElement('div'); bz.className = 'bezel'; bz.dataset.frame = FRAME_OF[li.dataset.bg];
+    var led = document.createElement('div'); led.className = 'led'; led.setAttribute('role', 'img'); led.setAttribute('aria-label', name + ' on MooBoard');
+    bz.appendChild(led); li.appendChild(bz);
+    li.insertAdjacentHTML('beforeend', '<div class="app-name">' + appIcon(li, n) + '<span>' + name + '</span></div>');
+    var b = new MB.Board(led, { scenes: [li.dataset.scene], auto: false });
+    bz.addEventListener('click', function () { b.moo(); });
+  });
+  $$('.an').forEach(function (btn) {
+    btn.addEventListener('click', function () { var r = $('#app-row'); r.scrollBy({ left: +btn.dataset.dir * r.clientWidth * .8, behavior: REDUCED ? 'auto' : 'smooth' }); });
+  });
+
   /* ---------- frame colours ---------- */
   var FRAMES = ['black', 'white', 'orange', 'teal'];
   var CBG = { black: '#E9FBF7', white: '#E3F2EE', orange: '#FFE7D6', teal: '#D5F8EF' };
@@ -538,6 +579,7 @@ var FORMSPREE_ID = ""; // set to the Formspree form id to open the waitlist
       start: 'top 92%',
       onEnter: function (b) { gsap.to(b, { y: 0, opacity: 1, rotate: 0, duration: .9, stagger: .09, ease: 'back.out(1.4)' }); }
     });
+    gsap.from('#app-row li', { y: 70, opacity: 0, rotate: function (i) { return i % 2 ? 8 : -8; }, duration: .8, stagger: .07, ease: 'back.out(1.7)', scrollTrigger: { trigger: '#app-row', start: 'top 88%' } });
     gsap.from('.big em', { x: 80, duration: 1.2, ease: 'power3.out', scrollTrigger: { trigger: '.shows .big', start: 'top 85%' } });
 
     // numbers count up
