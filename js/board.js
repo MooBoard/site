@@ -325,7 +325,7 @@
   var COMBO = { l: 34, r: W, sizes: [11, 9], key: 'combo' };
   S.combo = function () {
     return {
-      label: 'Cover + lyrics', dur: 12,
+      label: 'All in One', dur: 12,
       draw: function (ctx, t) {
         var M = window.MooMusic, tm = M && M.timing(), tr = M && M.track(), tint = tr && tr.tint ? hexc(tr.tint) : C.marigold;
         // the cover: the track's color as a soft square with a glowing disc
