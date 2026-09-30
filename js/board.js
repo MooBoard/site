@@ -262,22 +262,88 @@
     for (var i = 0; i < pages.length; i++) if (li >= pages[i].from && li <= pages[i].to) return pages[i];
     return pages[0];
   }
+  // instrumental gaps (before the first line, or 3 s or more between lines): Apple Music style dots that fill across the gap
+  function gapAt(tm, p) {
+    var L = tm.lines, GAP = 3;
+    if (!L.length) return null;
+    if (p < L[0].t0 && L[0].t0 >= GAP) return { k: clamp(p / L[0].t0, 0, 1) };
+    for (var i = 0; i < L.length - 1; i++) {
+      var ws = L[i].words, end = ws && ws.length ? ws[ws.length - 1].t1 : L[i].t1, nx = L[i + 1].t0;
+      if (end == null || isNaN(end)) end = L[i].t1;
+      if (p >= end && p < nx && nx - end >= GAP) return { k: clamp((p - end) / (nx - end), 0, 1) };
+    }
+    return null;
+  }
+  function gapDots(ctx, A, y, k, t, tint) {
+    var cxm = (A.l + A.r) / 2, hi = bright(tint || C.marigold), dim = mul(C.cream, .18);
+    for (var i = 0; i < 3; i++) {
+      var f = clamp(k * 3 - i, 0, 1), breathe = REDUCED ? 1 : .82 + .18 * Math.sin(t * 4 + i * 1.3);
+      var x = cxm + (i - 1) * 9, r = 2.2 + (REDUCED ? 0 : f * .5 * breathe);
+      disc(ctx, x, y, r, f > 0 ? mix(dim, mul(hi, breathe), f) : dim);
+    }
+  }
+  // syllables for the bounce: vowel groups, consonants split V-CV / VC-CV, common digraphs kept, a silent final e,
+  // and "-ing" / "-le" endings. One-syllable words stay whole. Returns the pieces (their letters join back to the word).
+  var DIG = /^(ch|sh|th|ph|wh|ck|ng|qu|gh)$/;
+  function syllables(word) {
+    var w = word.toLowerCase(), n = w.length, isV = [], i;
+    if (n <= 3 || !/[a-z]/.test(w)) return [word];
+    for (i = 0; i < n; i++) isV[i] = /[aeiou]/.test(w[i]) || (w[i] === 'y' && i > 0 && !/[aeiou]/.test(w[i - 1]));
+    if (w[n - 1] === 'e' && !isV[n - 2] && !(w[n - 2] === 'l' && n > 3 && !isV[n - 3])) isV[n - 1] = false;   // silent e (but keep "-le")
+    var groups = [];
+    for (i = 0; i < n; i++) if (isV[i] && !isV[i - 1]) groups.push(i);
+    if (groups.length < 2) return [word];
+    var cuts = [];
+    for (var g = 1; g < groups.length; g++) {
+      var end = groups[g - 1]; while (end < n && isV[end]) end++;
+      var cl = groups[g] - end, cut;
+      if (cl <= 1) cut = end;                                                       // V-CV
+      else if (cl === 2 && DIG.test(w.substr(end, 2))) cut = end;                    // keep "ch", "th" together
+      else if (cl >= 3 && DIG.test(w.substr(end + 1, 2))) cut = end + 1;              // "kit-chen"
+      else cut = end + 1;                                                             // VC-CV
+      cuts.push(cut);
+    }
+    if (/ing$/.test(w) && n > 4) { cuts = cuts.filter(function (c) { return c < n - 3; }); cuts.push(n - 3); }      // sing-ing
+    if (/[^aeiou]le$/.test(w) && n > 4) { cuts = cuts.filter(function (c) { return c < n - 3; }); cuts.push(n - 3); } // lit-tle
+    cuts = cuts.filter(function (c, k) { return c > 0 && c < n && cuts.indexOf(c) === k; }).sort(function (x, y) { return x - y; });
+    var out = [], last = 0;
+    cuts.forEach(function (c) { if (c > last) { out.push(word.slice(last, c)); last = c; } });
+    out.push(word.slice(last));
+    // a piece with no vowel joins the one before it ("sing-ing", not "si-ng-ing")
+    var fin = [];
+    out.forEach(function (pc) { if (fin.length && !/[aeiouy]/i.test(pc)) fin[fin.length - 1] += pc; else fin.push(pc); });
+    if (fin.length > 1 && !/[aeiouy]/i.test(fin[0])) fin.splice(0, 2, fin[0] + fin[1]);
+    return fin;
+  }
+  // a quick spring: up in ~80 ms, settles in ~200 ms with a small overshoot
+  function lift(dt, amp) {
+    if (dt < 0 || dt > .3) return 0;
+    if (dt < .08) return amp * dt / .08;
+    var v = (dt - .08) / .2;
+    return amp * (1 - v) - amp * .35 * Math.sin(v * Math.PI);
+  }
   function lyricRow(ctx, row, y, p, tint, A) {
     A = A || FULL;
     var font = row.font, line = join(row.words), m = measure(line, font), iw = m.l + m.r, av = A.r - A.l - 4;
     var hi = bright(tint || C.marigold), lo = mix(hi, C.white, .55), dim = mul(C.cream, .22);
-    // word spans relative to the ink start
+    // syllable spans relative to the ink start: [x0, x1, t0, t1]; each word's sweep time is shared by letter count
     var spans = [], acc = '';
     row.words.forEach(function (w, k) {
-      var st = k ? measure(acc + ' ', font).w : 0; acc += (k ? ' ' : '') + w.text;
-      spans.push([st, measure(acc, font).w, w.t0, Math.min(w.t1, w.t0 + .7)]);
+      var pre = acc + (k ? ' ' : ''), parts = syllables(w.text), t0 = w.t0, t1 = Math.min(w.t1, w.t0 + .7), dur = t1 - t0, done = 0;
+      parts.forEach(function (pt) {
+        var s0 = measure(pre + w.text.slice(0, done), font).w, s1 = measure(pre + w.text.slice(0, done + pt.length), font).w;
+        var a0 = t0 + dur * done / w.text.length, a1 = t0 + dur * (done + pt.length) / w.text.length;
+        spans.push([k || done ? s0 : 0, s1, a0, a1, done === 0, done + pt.length === w.text.length]);
+        done += pt.length;
+      });
+      acc = pre + w.text;
     });
     var inkX = row.scroll ? A.l + 2 : Math.round((A.l + A.r) / 2 - iw / 2);
     if (row.scroll) {
       // follow the sweep point continuously (no state, so every board scrolls alike), keeping a small margin
       var sx = 0;
       for (var q = 0; q < spans.length; q++) {
-        var f = clamp((p - spans[q][2]) / Math.max(.05, spans[q][3] - spans[q][2]), 0, 1);
+        var f = clamp((p - spans[q][2]) / Math.max(.03, spans[q][3] - spans[q][2]), 0, 1);
         if (p >= spans[q][2]) sx = spans[q][0] + (spans[q][1] - spans[q][0]) * f;
       }
       inkX = A.l + 2 - clamp(sx - av * .62, 0, iw - av);
@@ -292,19 +358,27 @@
         if (b > A.r - 1) for (gx = Math.max(0, Math.ceil(a)); gx < W; gx++) cut[gx] = 1;
       }
     }
-    text(ctx, line, x0, y, function (X) {
+    // the syllable being sung bounces (one at a time), as far as the headroom allows
+    var bq = -1, up = 0;
+    if (!REDUCED) for (var j = spans.length - 1; j >= 0; j--) if (p >= spans[j][2]) { up = Math.round(Math.min(A.lift || 2, y - m.a - 1) > 0 ? lift(p - spans[j][2], Math.min(A.lift || 2, y - m.a - 1)) : 0); if (up) bq = j; break; }
+    var colorAt = function (X, only) {
       if (cut[X]) return [0, 0, 0, 0];
       for (var q = 0; q < spans.length; q++) {
         var sp = spans[q], a0 = x0 + sp[0], a1 = x0 + sp[1];
-        if (X >= a0 - 1 && X <= a1 + 1) {
-          var f = (p - sp[2]) / Math.max(.05, sp[3] - sp[2]);
+        if (X >= (sp[4] ? a0 - 1 : Math.round(a0)) && X <= (sp[5] ? a1 + 1 : Math.round(a1) - 1)) {
+          if (only != null && q !== only) return [0, 0, 0, 0];
+          if (only == null && q === bq) return [0, 0, 0, 0];
+          var f = (p - sp[2]) / Math.max(.03, sp[3] - sp[2]);
           if (f >= 1 || (f > 0 && X <= a0 + (a1 - a0) * f)) return mix(lo, hi, clamp((X - inkX) / Math.max(1, iw), 0, 1));
           return dim;
         }
       }
-      return dim;
-    }, font);
+      return only != null ? [0, 0, 0, 0] : dim;
+    };
+    text(ctx, line, x0, y, function (X) { return colorAt(X, null); }, font);
+    if (bq >= 0) text(ctx, line, x0, y - up, function (X) { return colorAt(X, bq); }, font);
   }
+
   S.song = function () {
     return {
       label: 'Lyrics', dur: 12,
@@ -314,6 +388,8 @@
         var p = M.pos(), L = tm.lines, li = 0;
         while (li < L.length - 1 && p >= L[li].t1) li++;
         var tint = tr && tr.tint ? hexc(tr.tint) : null;
+        var gp = gapAt(tm, p);
+        if (gp) { gapDots(ctx, FULL, 16, gp.k, M.pos(), tint); return; }
         var pg = pageAt(tm, FULL, p);
         if (pg.rows.length === 2) { lyricRow(ctx, pg.rows[0], 13, p, tint); lyricRow(ctx, pg.rows[1], 28, p, tint); }
         else lyricRow(ctx, pg.rows[0], 21, p, tint);
@@ -322,7 +398,7 @@
   };
 
   // Cover + lyrics with a small clock, like the firmware layout: art square left, lyrics right, time in the corner
-  var COMBO = { l: 34, r: W, sizes: [11, 9], key: 'combo' };
+  var COMBO = { l: 34, r: W, sizes: [11, 9], key: 'combo', lift: 1 };
   S.combo = function () {
     return {
       label: 'All in One', dur: 12,
@@ -335,7 +411,9 @@
         var d = new Date(), c = clockParts(d), tm2 = c.h + ':' + c.m;
         text(ctx, tm2, W - 2 - measure(tm2, PIX).w, 8, mul(C.sky, .9));
         if (!tm || !tm.lines || !tm.lines.length) return;
-        var p = M.pos(), pg = pageAt(tm, COMBO, p);
+        var p = M.pos(), gp = gapAt(tm, p);
+        if (gp) { gapDots(ctx, COMBO, 22, gp.k, p, tint); return; }
+        var pg = pageAt(tm, COMBO, p);
         if (pg.rows.length === 2) { lyricRow(ctx, pg.rows[0], 20, p, tint, COMBO); lyricRow(ctx, pg.rows[1], 30, p, tint, COMBO); }
         else lyricRow(ctx, pg.rows[0], 24, p, tint, COMBO);
       }
@@ -920,7 +998,7 @@
   requestAnimationFrame(loop);
 
   window.MooBoard = {
-    Board: Board, scenes: S, boards: boards,
+    Board: Board, scenes: S, boards: boards, syllables: function (w) { return syllables(w); },
     now: function () { return (performance.now() - t0) / 1000; },
     labels: function (names) { return names.map(function (n) { return S[n] ? S[n]().label : n; }); }
   };
