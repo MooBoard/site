@@ -415,7 +415,7 @@ var FORMSPREE_ID = "xjyklakl"; // set to the Formspree form id to open the waitl
   /* ---------- static fallbacks (no GSAP) ---------- */
   function wireStatic() {
     $$('.cp').forEach(function (c, i) { c.addEventListener('click', function () { setColor(i, true); }); });
-    setColor(0);
+    setColor(3);
   }
   // room: loads zoomed out (the whole room); the toggle zooms into the wall board and back out
   var roomZoomed = false, roomTween = null, roomState = { p: 0 };
@@ -550,15 +550,16 @@ var FORMSPREE_ID = "xjyklakl"; // set to the Formspree form id to open the waitl
     var colorST = ST.create({
       trigger: '#colors', start: 'top top', end: '+=220%', pin: '#colors .pin', scrub: .5,
       onUpdate: function (self) {
-        var p = self.progress;
+        // the section opens on Mint Glow: scrolling runs the color sequence backwards (teal, orange, white, black)
+        var p = 1 - self.progress;
         if (colorSeq) colorSeq.set(p);
         else gsap.set('#colors .swing', { rotateY: -16 + p * 32, rotateX: 6 - p * 6 });
         setColor(rangeIndex(colorSeq, 'colors', FRAMES, p));
       }
     });
-    setColor(0);
+    setColor(3);
     $$('.cp').forEach(function (c, i) {
-      c.addEventListener('click', function () { setHeroFrame(FRAMES[i]); scrollTo(colorST.start + (colorST.end - colorST.start) * rangeProgress(colorSeq, 'colors', FRAMES[i], i, 4)); });
+      c.addEventListener('click', function () { setHeroFrame(FRAMES[i]); scrollTo(colorST.start + (colorST.end - colorST.start) * (1 - rangeProgress(colorSeq, 'colors', FRAMES[i], i, 4))); });
     });
 
     if (!REDUCED) {
