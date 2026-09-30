@@ -42,7 +42,7 @@ The four launch frame colours (the product itself):
 |---|---|---|---|
 | Black | Midnight | `#17191C` | matte |
 | White | Moonlight | `#F5F3EF` | matte, slightly warm |
-| Orange | Sunrise | `#FF7A21` | bright, not rust |
+| Orange | Sunset | `#FF7A21` | bright, not rust |
 | Translucent Teal | Mint Glow (Special Edition) | `#77EDD7` at ~55% opacity | Bambu PETG Translucent Teal (32501), the filament the owner bought; frosted, glows where light reaches it |
 
 ## Type
