@@ -483,3 +483,42 @@ h1, h2 { font-family: var(--display); font-weight: 600; letter-spacing: -.01em; 
   .controls { margin-top: 22px; gap: 10px 16px; }
 }
 @media (max-width: 700px) { .logo { padding: 6px 4px; margin: -6px -4px; } }
+
+/* ---------- the translucent teal: a glassy swatch and a frosted note ---------- */
+[data-frame="teal"].sw, .cp[data-frame="teal"] i {
+  background:
+    radial-gradient(circle at 32% 28%, rgba(255, 255, 255, .95) 0 10%, rgba(255, 255, 255, 0) 32%),
+    linear-gradient(140deg, rgba(210, 255, 245, .95), rgba(119, 237, 215, .7) 45%, rgba(119, 237, 215, .42) 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .6), inset 0 -5px 8px rgba(14, 107, 94, .28), 0 0 14px rgba(119, 237, 215, .55);
+  backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
+}
+.glass-note {
+  position: relative; display: inline-flex; align-items: center; gap: 8px; height: 30px; padding: 0 14px 0 10px; border-radius: 999px; overflow: hidden;
+  font-family: var(--display); font-weight: 600; font-size: 14px; letter-spacing: .01em; white-space: nowrap; color: #eafffa;
+  /* frosted see-through glass with a teal tint: whatever is behind shows through, softened */
+  background: linear-gradient(160deg, rgba(210, 255, 246, .26) 0%, rgba(119, 237, 215, .14) 45%, rgba(119, 237, 215, .06) 100%);
+  border: 1px solid rgba(210, 255, 244, .5);
+  backdrop-filter: blur(6px) saturate(1.6) brightness(1.08); -webkit-backdrop-filter: blur(6px) saturate(1.6) brightness(1.08);
+  box-shadow: 0 0 22px rgba(119, 237, 215, .35), inset 0 1px 0 rgba(255, 255, 255, .55), inset 0 -1px 0 rgba(14, 107, 94, .25), inset 0 0 12px rgba(119, 237, 215, .25);
+  text-shadow: 0 1px 6px rgba(14, 26, 34, .35);
+  opacity: 0; transform: translateY(6px) scale(.96); pointer-events: none;
+  transition: opacity .5s var(--ease), transform .5s var(--ease);
+}
+.glass-note i { width: 9px; height: 9px; border-radius: 50%; flex: none; background: radial-gradient(circle at 35% 30%, #fff, #77EDD7 55%, rgba(119, 237, 215, .3)); box-shadow: 0 0 10px #77EDD7; }
+.glass-note::after {
+  content: ''; position: absolute; inset: -40% auto -40% -60%; width: 45%; transform: skewX(-20deg);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .55), transparent); animation: lightleak 3.6s 1s ease-in-out infinite;
+}
+@keyframes lightleak { 0% { left: -60%; } 55%, 100% { left: 130%; } }
+[data-frame="teal"] > .glass-note, [data-frame="teal"] .glass-colors { opacity: 1; transform: none; }
+.glass-hero { max-width: 0; padding: 0; border-width: 0; transition: opacity .5s var(--ease), transform .5s var(--ease), max-width .5s var(--ease), padding .5s var(--ease); }
+.controls[data-frame="teal"] > .glass-hero { max-width: 200px; padding: 0 14px 0 10px; border-width: 1px; }
+.color-pick-wrap { position: relative; z-index: 3; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.colors.has-frames .color-pick-wrap { position: absolute; left: var(--gut); right: var(--gut); bottom: max(40px, 7vh); }
+.colors.has-frames .color-pick-wrap .color-pick { position: static; width: 100%; }
+.glass-colors { color: var(--deep); text-shadow: 0 1px 0 rgba(255, 255, 255, .6); background: linear-gradient(160deg, rgba(255, 255, 255, .38), rgba(119, 237, 215, .2) 55%, rgba(119, 237, 215, .1)); border-color: rgba(119, 237, 215, .95); box-shadow: 0 0 26px rgba(119, 237, 215, .55), inset 0 1px 0 rgba(255, 255, 255, .9), inset 0 0 14px rgba(119, 237, 215, .35); }
+@media (max-width: 700px) {
+  .colors.has-frames .color-pick-wrap { bottom: calc(var(--bar) + 14px); }
+  .glass-note { font-size: 13px; height: 28px; }
+}
+@media (prefers-reduced-motion: reduce) { .glass-note::after { display: none; } }

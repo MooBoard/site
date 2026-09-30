@@ -107,6 +107,7 @@ var FORMSPREE_ID = "xjyklakl"; // set to the Formspree form id to open the waitl
   var MARK_FRAME = { black: '#17191C', white: '#FFFFFF', orange: '#FF7A21', teal: '#77EDD7' };
   function setHeroFrame(f) {
     $('#hero-bezel').dataset.frame = f;
+    $('.hero .controls').dataset.frame = f;
     $$('.mark').forEach(function (m) { m.style.setProperty('--mark-frame', MARK_FRAME[f]); m.dataset.frame = f; });
     $$('.swatches .sw').forEach(function (s) { s.classList.toggle('on', s.dataset.frame === f); s.setAttribute('aria-checked', s.dataset.frame === f); });
   }
@@ -119,6 +120,7 @@ var FORMSPREE_ID = "xjyklakl"; // set to the Formspree form id to open the waitl
     var f = FRAMES[i];
     $('#color-bezel').dataset.frame = f;
     $('#colors').style.setProperty('--cbg', CBG[f]);
+    $('#colors').dataset.frame = f;
     $$('.cp').forEach(function (c) { c.classList.toggle('on', c.dataset.frame === f); c.setAttribute('aria-checked', c.dataset.frame === f); });
     $$('.color-stills img').forEach(function (c) { c.classList.toggle('on', c.dataset.frame === f); });
     if (fromUser) setHeroFrame(f);
