@@ -40,7 +40,7 @@
     var m = sx.measureText(str);
     return { l: m.actualBoundingBoxLeft, r: m.actualBoundingBoxRight, a: m.actualBoundingBoxAscent, d: m.actualBoundingBoxDescent, w: m.width };
   }
-  // x position that centres the ink of str on cx (left aligned drawing)
+  // x position that centers the ink of str on cx (left aligned drawing)
   function cx(str, font, c) { var m = measure(str, font); return Math.round(c - (m.r - m.l) / 2); }
 
   // draw str with its baseline at y. color: [r,g,b] or fn(x,y) -> [r,g,b,alpha?]
@@ -103,7 +103,7 @@
       var lat = 40 * (/^(Australia|Pacific\/Auckland|America\/(Sao_Paulo|Argentina|Santiago)|Africa\/Johannesburg)/.test(Intl.DateTimeFormat().resolvedOptions().timeZone || '') ? -1 : 1);
       var decl = 23.44 * Math.sin((2 * Math.PI / 365) * (doy - 81)) * Math.PI / 180, la = lat * Math.PI / 180;
       var ha = Math.acos(Math.max(-1, Math.min(1, -Math.tan(la) * Math.tan(decl)))) * 12 / Math.PI;
-      var noon = 12 + dst; // the zone's centre longitude puts solar noon near 12:00 standard time
+      var noon = 12 + dst; // the zone's center longitude puts solar noon near 12:00 standard time
       return [noon - ha, noon + ha];
     } catch (e) { return [6.5, 18.5]; }
   })();
@@ -218,47 +218,53 @@
     };
   };
 
-  // the playlist (js/music.js): the current line lights word by word in the track's colour
+  // the playlist (js/music.js): the current line lights word by word in the track's color
   function bright(c) { var m = Math.max(c[0], c[1], c[2], 1); return mul(c, 255 / m); }
   // Lyric layout, like the real board: no glyph is ever clipped.
   // 1) the line fits by ink at 13 px, 2) or at 11 px, 3) or it wraps at a word into both rows,
   // 4) or the row scrolls smoothly so the word being sung stays in view; words not fully on the board are not drawn.
-  var LYR = [13, 11], AVAIL = W - 4;
+  // An area is where the lyrics may go: { l, r, sizes }. The full board uses 13 then 11 px.
+  var FULL = { l: 0, r: W, sizes: [13, 11], key: 'full' };
   function lf(px2) { return '900 ' + px2 + 'px Nunito'; }
   function join(ws) { return ws.map(function (w) { return w.text; }).join(' '); }
   function inkW(str, font) { var m = measure(str, font); return m.l + m.r; }
-  function fitRow(ws) {
-    for (var i = 0; i < LYR.length; i++) if (inkW(join(ws), lf(LYR[i])) <= AVAIL) return { words: ws, font: lf(LYR[i]) };
-    return null;
-  }
-  function rowsFor(line) {
-    var ws = line.words, r = fitRow(ws);
-    if (r) return [r];
-    if (ws.length < 2) return [{ words: ws, font: lf(11), scroll: true }];
-    for (var i = 0; i < LYR.length; i++) {
-      var f = lf(LYR[i]), best = null;
+  function rowsFor(line, A) {
+    var ws = line.words, av = A.r - A.l - 4, sz = A.sizes, i, f;
+    for (i = 0; i < sz.length; i++) { f = lf(sz[i]); if (inkW(join(ws), f) <= av) return [{ words: ws, font: f }]; }
+    f = lf(sz[sz.length - 1]);
+    if (ws.length < 2) return [{ words: ws, font: f, scroll: true }];
+    for (i = 0; i < sz.length; i++) {
+      var fi = lf(sz[i]), best = null;
       for (var k = 1; k < ws.length; k++) {
-        var m = Math.max(inkW(join(ws.slice(0, k)), f), inkW(join(ws.slice(k)), f));
+        var m = Math.max(inkW(join(ws.slice(0, k)), fi), inkW(join(ws.slice(k)), fi));
         if (!best || m < best[1]) best = [k, m];
       }
-      if (best[1] <= AVAIL || i === LYR.length - 1) {
-        var A = ws.slice(0, best[0]), B = ws.slice(best[0]);
-        return [{ words: A, font: f, scroll: inkW(join(A), f) > AVAIL }, { words: B, font: f, scroll: inkW(join(B), f) > AVAIL }];
+      if (best[1] <= av || i === sz.length - 1) {
+        var P = ws.slice(0, best[0]), Q = ws.slice(best[0]);
+        return [{ words: P, font: fi, scroll: inkW(join(P), fi) > av }, { words: Q, font: fi, scroll: inkW(join(Q), fi) > av }];
       }
     }
   }
-  // pages: two one-row lines share the board (top sweeps, then bottom); a line that needs both rows gets the board to itself
-  function pagesFor(tm) {
-    if (tm._pages) return tm._pages;
-    var L = tm.lines, rows = L.map(rowsFor), pages = [], i = 0;
+  // pages: two one-row lines share the area (top sweeps, then bottom); a line that needs both rows gets it to itself
+  function pagesFor(tm, A) {
+    A = A || FULL; tm._pages = tm._pages || {};
+    if (tm._pages[A.key]) return tm._pages[A.key];
+    var L = tm.lines, rows = L.map(function (l) { return rowsFor(l, A); }), pages = [], i = 0;
     while (i < L.length) {
       if (rows[i].length === 1 && !rows[i][0].scroll && L[i + 1] && rows[i + 1].length === 1 && !rows[i + 1][0].scroll) { pages.push({ from: i, to: i + 1, rows: [rows[i][0], rows[i + 1][0]] }); i += 2; }
       else { pages.push({ from: i, to: i, rows: rows[i] }); i += 1; }
     }
-    return (tm._pages = pages);
+    return (tm._pages[A.key] = pages);
   }
-  function lyricRow(ctx, row, y, p, tint) {
-    var font = row.font, line = join(row.words), m = measure(line, font), iw = m.l + m.r;
+  function pageAt(tm, A, p) {
+    var L = tm.lines, li = 0, pages = pagesFor(tm, A);
+    while (li < L.length - 1 && p >= L[li].t1) li++;
+    for (var i = 0; i < pages.length; i++) if (li >= pages[i].from && li <= pages[i].to) return pages[i];
+    return pages[0];
+  }
+  function lyricRow(ctx, row, y, p, tint, A) {
+    A = A || FULL;
+    var font = row.font, line = join(row.words), m = measure(line, font), iw = m.l + m.r, av = A.r - A.l - 4;
     var hi = bright(tint || C.marigold), lo = mix(hi, C.white, .55), dim = mul(C.cream, .22);
     // word spans relative to the ink start
     var spans = [], acc = '';
@@ -266,7 +272,7 @@
       var st = k ? measure(acc + ' ', font).w : 0; acc += (k ? ' ' : '') + w.text;
       spans.push([st, measure(acc, font).w, w.t0, Math.min(w.t1, w.t0 + .7)]);
     });
-    var inkX = row.scroll ? 2 : Math.round(64 - iw / 2);
+    var inkX = row.scroll ? A.l + 2 : Math.round((A.l + A.r) / 2 - iw / 2);
     if (row.scroll) {
       // follow the sweep point continuously (no state, so every board scrolls alike), keeping a small margin
       var sx = 0;
@@ -274,21 +280,20 @@
         var f = clamp((p - spans[q][2]) / Math.max(.05, spans[q][3] - spans[q][2]), 0, 1);
         if (p >= spans[q][2]) sx = spans[q][0] + (spans[q][1] - spans[q][0]) * f;
       }
-      inkX = 2 - clamp(sx - AVAIL * .62, 0, iw - AVAIL);
+      inkX = A.l + 2 - clamp(sx - av * .62, 0, iw - av);
     }
-    var x0 = inkX + m.l, cut = null;
+    var x0 = inkX + m.l, cut = new Uint8Array(W), gx;
+    for (gx = 0; gx < W; gx++) if (gx <= A.l || gx >= A.r - 1) cut[gx] = 1;
     if (row.scroll) {
-      // a glyph that is not wholly on the board is not drawn at all
-      cut = new Uint8Array(W);
+      // a glyph that is not wholly inside the area is not drawn at all
       for (var c = 0; c < line.length; c++) {
-        var a = x0 + measure(line.slice(0, c), font).w, b = x0 + measure(line.slice(0, c + 1), font).w, gx;
-        if (a < 1) for (gx = 0; gx < Math.min(W, Math.floor(b)); gx++) cut[gx] = 1;          // cut on the left: hide up to its end
-        if (b > W - 1) for (gx = Math.max(0, Math.ceil(a)); gx < W; gx++) cut[gx] = 1;      // cut on the right: hide from its start
+        var a = x0 + measure(line.slice(0, c), font).w, b = x0 + measure(line.slice(0, c + 1), font).w;
+        if (a < A.l + 1) for (gx = 0; gx < Math.min(W, Math.floor(b)); gx++) cut[gx] = 1;
+        if (b > A.r - 1) for (gx = Math.max(0, Math.ceil(a)); gx < W; gx++) cut[gx] = 1;
       }
-      cut[0] = 1; cut[W - 1] = 1;
     }
     text(ctx, line, x0, y, function (X) {
-      if (cut && cut[X]) return [0, 0, 0, 0];
+      if (cut[X]) return [0, 0, 0, 0];
       for (var q = 0; q < spans.length; q++) {
         var sp = spans[q], a0 = x0 + sp[0], a1 = x0 + sp[1];
         if (X >= a0 - 1 && X <= a1 + 1) {
@@ -309,10 +314,30 @@
         var p = M.pos(), L = tm.lines, li = 0;
         while (li < L.length - 1 && p >= L[li].t1) li++;
         var tint = tr && tr.tint ? hexc(tr.tint) : null;
-        var pages = pagesFor(tm), pg = pages[0];
-        for (var i = 0; i < pages.length; i++) if (li >= pages[i].from && li <= pages[i].to) { pg = pages[i]; break; }
+        var pg = pageAt(tm, FULL, p);
         if (pg.rows.length === 2) { lyricRow(ctx, pg.rows[0], 13, p, tint); lyricRow(ctx, pg.rows[1], 28, p, tint); }
         else lyricRow(ctx, pg.rows[0], 21, p, tint);
+      }
+    };
+  };
+
+  // Cover + lyrics with a small clock, like the firmware layout: art square left, lyrics right, time in the corner
+  var COMBO = { l: 34, r: W, sizes: [11, 9], key: 'combo' };
+  S.combo = function () {
+    return {
+      label: 'Cover + lyrics', dur: 12,
+      draw: function (ctx, t) {
+        var M = window.MooMusic, tm = M && M.timing(), tr = M && M.track(), tint = tr && tr.tint ? hexc(tr.tint) : C.marigold;
+        // the cover: the track's color as a soft square with a glowing disc
+        for (var y = 0; y < 32; y++) rect(ctx, 0, y, 32, 1, mix(mul(tint, .35), mix(tint, C.white, .35), y / 31));
+        disc(ctx, 16, 14, 8, mix(tint, C.white, .6), .9); disc(ctx, 16, 14, 5, mix(tint, C.white, .85));
+        for (var r = 0; r < 4; r++) rect(ctx, 4 + r * 2, 25 + r, 24 - r * 4, 1, mix(tint, C.white, .3), .7);
+        var d = new Date(), c = clockParts(d), tm2 = c.h + ':' + c.m;
+        text(ctx, tm2, W - 2 - measure(tm2, PIX).w, 8, mul(C.sky, .9));
+        if (!tm || !tm.lines || !tm.lines.length) return;
+        var p = M.pos(), pg = pageAt(tm, COMBO, p);
+        if (pg.rows.length === 2) { lyricRow(ctx, pg.rows[0], 20, p, tint, COMBO); lyricRow(ctx, pg.rows[1], 30, p, tint, COMBO); }
+        else lyricRow(ctx, pg.rows[0], 24, p, tint, COMBO);
       }
     };
   };
@@ -424,7 +449,7 @@
           for (var yd = 1; yd < 10; yd++) rect(ctx, 12 + yd * 10.4, 26, 1, 5, [60, 140, 70]);
           var bx = 70 + Math.sin(t * 2) * 1.5; rect(ctx, bx, 28, 2, 1, [200, 110, 50]); rect(ctx, 80, 26, 1, 5, [255, 220, 60]);
         } else {
-          // celebration: cut to team colour, gold flashes, logo punch, TOUCHDOWN letter by letter, confetti, score ticks up
+          // celebration: cut to team color, gold flashes, logo punch, TOUCHDOWN letter by letter, confetti, score ticks up
           var k = ph - 10.5;
           rect(ctx, 0, 0, W, H, mul(A.c, .75));
           if (!REDUCED && k < 1.2 && Math.floor(k * 5) % 2 === 0) rect(ctx, 0, 0, W, H, [255, 200, 60], .55);
@@ -563,7 +588,7 @@
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (j) {
         if (j && j.current) WX = { temp: Math.round(j.current.temperature_2m), kind: wxKind(j.current.weather_code), city: c[2] };
-        // today's real sunrise and sunset (local clock times) drive the arc and the sky colours
+        // today's real sunrise and sunset (local clock times) drive the arc and the sky colors
         var d = j && j.daily, hr = function (iso) { var m = /T(\d+):(\d+)/.exec(iso || ''); return m ? +m[1] + +m[2] / 60 : null; };
         var r = d && hr(d.sunrise && d.sunrise[0]), st = d && hr(d.sunset && d.sunset[0]);
         if (r != null && st != null && st > r) { SUN[0] = r; SUN[1] = st; }
@@ -721,7 +746,7 @@
   ];
   var MARKC = { c: C.cream, p: [255, 170, 195], w: C.white };
   // the brand cow on the LED grid, taken from the firmware startup card: 34 x 25 LEDs.
-  // pupil: optional colour for the two pupil LEDs (celebrations flash them; the whites stay white)
+  // pupil: optional color for the two pupil LEDs (celebrations flash them; the whites stay white)
   function drawMark(ctx, x0, y0, k, t, frame, pupil) {
     var blink = (t % 3.7) < .14;
     for (var r = 0; r < MARK.length; r++) for (var c = 0; c < MARK[r].length; c++) {
@@ -738,7 +763,7 @@
     return {
       label: 'Moo', dur: 4.5,
       draw: function (ctx, t, st) {
-        // the cow and MOO as one centred group, 2 LEDs clear of every edge
+        // the cow and MOO as one centered group, 2 LEDs clear of every edge
         var font = '700 24px Fredoka', gap = 5, cw = MARK[0].length, word = 'MOO';
         var ww = measure(word, font), inkW = Math.ceil(ww.r - ww.l) + 4, x0 = Math.round((W - (cw + gap + inkW)) / 2);
         var pupil = st < 2.6 && !REDUCED ? hsl(Math.floor(t * 10) * 47, 1, .55) : null;

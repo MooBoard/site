@@ -66,7 +66,7 @@ if (/[?&]debug/.test(location.search)) { window.__err = []; addEventListener('er
 
   <div class="controls" data-hero>
     <div class="chips" id="chips" role="group" aria-label="Scenes"></div>
-    <div class="swatches" role="radiogroup" aria-label="Frame colour">
+    <div class="swatches" role="radiogroup" aria-label="Frame color">
       <button class="sw" role="radio" aria-checked="false" data-frame="black" aria-label="Black"></button>
       <button class="sw" role="radio" aria-checked="false" data-frame="white" aria-label="White"></button>
       <button class="sw" role="radio" aria-checked="false" data-frame="orange" aria-label="Orange"></button>
@@ -109,7 +109,9 @@ if (/[?&]debug/.test(location.search)) { window.__err = []; addEventListener('er
     <figure class="tile" data-scene="calendar" data-frame="black"><figcaption>Calendar</figcaption></figure>
     <figure class="tile" data-scene="lights" data-frame="white"><figcaption>Lights sync</figcaption></figure>
     <figure class="tile" data-scene="art" data-frame="teal"><figcaption>Album art</figcaption></figure>
-    <figure class="tile t-wide" data-scene="prayer" data-frame="orange"><figcaption>Prayer</figcaption></figure>
+    <figure class="tile" data-scene="prayer" data-frame="orange"><figcaption>Prayer</figcaption></figure>
+    <figure class="tile" data-scene="score" data-frame="black"><figcaption>Scores</figcaption></figure>
+    <figure class="tile t-wide" data-scene="combo" data-frame="teal"><figcaption>Cover, lyrics and time</figcaption></figure>
   </div>
 </section>
 
@@ -147,7 +149,7 @@ if (/[?&]debug/.test(location.search)) { window.__err = []; addEventListener('er
         <div class="bezel" id="color-bezel" data-frame="black"><div class="led" id="color-board"></div></div>
       </div>
     </div>
-    <div class="color-pick" role="radiogroup" aria-label="Frame colour">
+    <div class="color-pick" role="radiogroup" aria-label="Frame color">
       <button class="cp on" role="radio" aria-checked="true" data-frame="black"><i></i><span>Black</span></button>
       <button class="cp" role="radio" aria-checked="false" data-frame="white"><i></i><span>White</span></button>
       <button class="cp" role="radio" aria-checked="false" data-frame="orange"><i></i><span>Orange</span></button>
@@ -195,7 +197,7 @@ if (/[?&]debug/.test(location.search)) { window.__err = []; addEventListener('er
     <div class="stat" data-reveal><b>128<small>x</small>32</b><span>pixels</span></div>
     <div class="stat" data-reveal><b><span data-count="518">518</span><small>mm</small></b><span>wide</span></div>
     <div class="stat" data-reveal><b>44<small>mm</small></b><span>deep</span></div>
-    <div class="stat" data-reveal><b>4</b><span>frame colours</span></div>
+    <div class="stat" data-reveal><b>4</b><span>frame colors</span></div>
   </div>
   <div class="marquee" aria-hidden="true">
     <div class="track">

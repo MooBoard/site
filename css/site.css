@@ -66,7 +66,7 @@ h1, h2 { font-family: var(--display); font-weight: 600; letter-spacing: -.01em; 
 @keyframes earL { 0%, 100% { transform: rotate(0); } 20% { transform: rotate(16deg); } 40% { transform: rotate(-10deg); } 60% { transform: rotate(10deg); } 80% { transform: rotate(-4deg); } }
 @keyframes earR { 0%, 100% { transform: rotate(0); } 20% { transform: rotate(-16deg); } 40% { transform: rotate(10deg); } 60% { transform: rotate(-10deg); } 80% { transform: rotate(4deg); } }
 @keyframes blink { 0%, 94%, 100% { transform: scaleY(1); } 96% { transform: scaleY(.15); } }
-/* pupils: loading cycles the brand colours, happy flashes and glows */
+/* pupils: loading cycles the brand colors, happy flashes and glows */
 .mark.loading { animation: jitter .24s steps(3) infinite; }
 .mark.loading .eyes { animation: none; }
 @keyframes jitter { 0% { transform: translate(0, 0); } 33% { transform: translate(1px, -1px); } 66% { transform: translate(-1px, 1px); } 100% { transform: translate(1px, 1px); } }
@@ -193,7 +193,7 @@ h1, h2 { font-family: var(--display); font-weight: 600; letter-spacing: -.01em; 
   .t-wide .bezel { width: 74%; margin: 0 auto; }
 }
 
-/* ---------- colours ---------- */
+/* ---------- colors ---------- */
 .colors { background: var(--cbg, #EEF3F4); color: var(--ink); transition: background .8s var(--ease); }
 .colors .pin { grid-template-rows: auto 1fr auto; align-content: center; padding: 90px var(--gut) 44px; gap: 0; }
 .colors .big { margin: 0; text-align: center; font-size: clamp(44px, 8vw, 120px); }
@@ -440,7 +440,7 @@ h1, h2 { font-family: var(--display); font-weight: 600; letter-spacing: -.01em; 
 .colors.has-frames .color-pick { position: absolute; left: var(--gut); right: var(--gut); bottom: max(40px, 7vh); }
 @media (max-width: 700px) { .colors.has-frames .color-pick { bottom: 90px; } }
 
-/* the nav and footer marks wear the chosen frame colour */
+/* the nav and footer marks wear the chosen frame color */
 .mark .mf { fill: var(--mark-frame, #77EDD7); transition: fill .5s var(--ease); }
 .mark[data-frame="black"] { filter: drop-shadow(0 0 1px rgba(255, 255, 255, .45)); }
 

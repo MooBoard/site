@@ -101,7 +101,7 @@ var FORMSPREE_ID = "xjyklakl"; // set to the Formspree form id to open the waitl
     btn.addEventListener('click', function () { var r = $('#app-row'); r.scrollBy({ left: +btn.dataset.dir * r.clientWidth * .8, behavior: REDUCED ? 'auto' : 'smooth' }); });
   });
 
-  /* ---------- frame colours ---------- */
+  /* ---------- frame colors ---------- */
   var FRAMES = ['black', 'white', 'orange', 'teal'];
   var CBG = { black: '#E9FBF7', white: '#E3F2EE', orange: '#FFE7D6', teal: '#D5F8EF' };
   var MARK_FRAME = { black: '#17191C', white: '#FFFFFF', orange: '#FF7A21', teal: '#77EDD7' };
@@ -150,7 +150,7 @@ var FORMSPREE_ID = "xjyklakl"; // set to the Formspree form id to open the waitl
 
   /* ---------- the cow's eyes ---------- */
   var marks = $$('.mark'), loads = 0;
-  // pupils cycle the brand colours while something loads
+  // pupils cycle the brand colors while something loads
   // loading: the pupils blink random rainbow hues every ~100 ms while the mark jitters (CSS), then settle.
   // the white eye dots always stay white
   var rainbowT = 0;
@@ -171,7 +171,7 @@ var FORMSPREE_ID = "xjyklakl"; // set to the Formspree form id to open the waitl
     Promise.resolve(p).then(done, done);
     return p;
   }
-  // happy eyes: pupils flash and glow, ears wiggle, confetti in the brand colours
+  // happy eyes: pupils flash and glow, ears wiggle, confetti in the brand colors
   var happyT = 0;
   function happy(from) {
     marks.forEach(function (m) { m.classList.remove('happy'); void m.getBoundingClientRect(); m.classList.add('happy'); });
@@ -228,7 +228,7 @@ var FORMSPREE_ID = "xjyklakl"; // set to the Formspree form id to open the waitl
   function mixHex(a, b, t) { var x = rgbOf(a), y = rgbOf(b); return hexOf([x[0] + (y[0] - x[0]) * t, x[1] + (y[1] - x[1]) * t, x[2] + (y[2] - x[2]) * t]); }
   function lum(h) { return rgbOf(h).map(function (v) { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); }).reduce(function (s, v, i) { return s + v * [.2126, .7152, .0722][i]; }, 0); }
   function contrast(a, b) { var x = lum(a), y = lum(b); return (Math.max(x, y) + .05) / (Math.min(x, y) + .05); }
-  // the page accent follows the track colour; every text on it keeps AA contrast
+  // the page accent follows the track color; every text on it keeps AA contrast
   function setAccent(hex) {
     var solid = hex, k = 0, text = contrast(hex, INK) >= contrast(hex, '#FFFFFF') ? INK : '#FFFFFF';
     while (contrast(solid, text) < 4.5 && k++ < 20) solid = mixHex(solid, text === INK ? '#FFFFFF' : '#000000', .06);
@@ -528,7 +528,7 @@ var FORMSPREE_ID = "xjyklakl"; // set to the Formspree form id to open the waitl
       .fromTo(caps[2], { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: .08 }, .72)
       .to({}, { duration: .2 }, .8);
 
-    // which colour (or place) a scroll position shows. A sequence can say which frames show what:
+    // which color (or place) a scroll position shows. A sequence can say which frames show what:
     // "colors": { "black": [1, 30], ... } or "places": { "wall": [1, 60], "desk": [61, 120] } (1-based frames)
     function rangeIndex(sq, key, names, p) {
       var r = sq && sq.spec[key];
@@ -543,7 +543,7 @@ var FORMSPREE_ID = "xjyklakl"; // set to the Formspree form id to open the waitl
       return a ? ((a[0] + a[1]) / 2 - 1) / (sq.n - 1) : (i + .5) / count;
     }
 
-    // colours
+    // colors
     var colorSeq = seqs.colors;
     var colorST = ST.create({
       trigger: '#colors', start: 'top top', end: '+=220%', pin: '#colors .pin', scrub: .5,
